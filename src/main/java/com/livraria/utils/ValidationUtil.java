@@ -1,5 +1,7 @@
 package com.livraria.utils;
 
+import java.util.regex.Pattern;
+
 public class ValidationUtil {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
