@@ -10,7 +10,55 @@ import java.util.List;
 /**
  * DAO para operações com usuários
  */
-public class UserDAO extends BaseDAO {
+public class UserDAO extends BaseDAO<User> {
+
+    @Override
+    protected String getTableName() {
+        return "users";
+    }
+
+    @Override
+    public List<User> findAll() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public User findById(Long id) {
+        try {
+            return buscarPorId(id.intValue());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public User save(User entity) {
+        try {
+            return criar(entity);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public User update(User entity) {
+        try {
+            atualizar(entity);
+            return entity;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean delete(Long id) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected User mapResultSetToEntity(ResultSet rs) throws SQLException {
+        return mapRowToUser(rs);
+    }
     
     /**
      * Busca usuário por ID

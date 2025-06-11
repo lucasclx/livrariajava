@@ -12,7 +12,55 @@ import java.util.List;
 /**
  * DAO para operações com carrinho
  */
-public class CartDAO extends BaseDAO {
+public class CartDAO extends BaseDAO<Cart> {
+
+    @Override
+    protected String getTableName() {
+        return "carts";
+    }
+
+    @Override
+    public List<Cart> findAll() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Cart findById(Long id) {
+        try {
+            return buscarPorId(id.intValue());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Cart save(Cart entity) {
+        try {
+            return criar(entity);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Cart update(Cart entity) {
+        try {
+            atualizar(entity);
+            return entity;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean delete(Long id) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected Cart mapResultSetToEntity(ResultSet rs) throws SQLException {
+        return mapRowToCart(rs);
+    }
     
     /**
      * Busca carrinho por ID
