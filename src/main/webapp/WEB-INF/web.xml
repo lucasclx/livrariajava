@@ -105,7 +105,7 @@
     <!-- Autenticação -->
     <servlet>
         <servlet-name>AuthController</servlet-name>
-        <servlet-class>com.livraria.controllers.AuthController</servlet-class>
+        <servlet-class>com.livraria.controllers.auth.AuthController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>AuthController</servlet-name>
