@@ -1,6 +1,7 @@
 package com.livraria.models;
 
-import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -8,17 +9,20 @@ import java.util.ArrayList;
  * Modelo que representa um Usuário do sistema
  */
 public class User {
-    private Long id;
+    private Integer id;
     private String name;
     private String email;
     private String password;
     private String telefone;
     private String cpf;
+    private LocalDate dataNascimento;
+    private String genero;
     private Boolean isAdmin;
     private Boolean ativo;
-    private Timestamp emailVerifiedAt;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+    private LocalDateTime emailVerifiedAt;
+    private LocalDateTime lastLoginAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     
     // Relacionamentos
     private List<UserAddress> enderecos;
@@ -43,8 +47,8 @@ public class User {
     }
     
     // Getters e Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
     
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -61,20 +65,29 @@ public class User {
     public String getCpf() { return cpf; }
     public void setCpf(String cpf) { this.cpf = cpf; }
     
+    public LocalDate getDataNascimento() { return dataNascimento; }
+    public void setDataNascimento(LocalDate dataNascimento) { this.dataNascimento = dataNascimento; }
+    
+    public String getGenero() { return genero; }
+    public void setGenero(String genero) { this.genero = genero; }
+    
     public Boolean getIsAdmin() { return isAdmin; }
     public void setIsAdmin(Boolean isAdmin) { this.isAdmin = isAdmin; }
     
     public Boolean getAtivo() { return ativo; }
     public void setAtivo(Boolean ativo) { this.ativo = ativo; }
     
-    public Timestamp getEmailVerifiedAt() { return emailVerifiedAt; }
-    public void setEmailVerifiedAt(Timestamp emailVerifiedAt) { this.emailVerifiedAt = emailVerifiedAt; }
+    public LocalDateTime getEmailVerifiedAt() { return emailVerifiedAt; }
+    public void setEmailVerifiedAt(LocalDateTime emailVerifiedAt) { this.emailVerifiedAt = emailVerifiedAt; }
     
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getLastLoginAt() { return lastLoginAt; }
+    public void setLastLoginAt(LocalDateTime lastLoginAt) { this.lastLoginAt = lastLoginAt; }
     
-    public Timestamp getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
     
     public List<UserAddress> getEnderecos() { return enderecos; }
     public void setEnderecos(List<UserAddress> enderecos) { this.enderecos = enderecos; }
@@ -139,7 +152,7 @@ public class User {
         }
         
         return this.enderecos.stream()
-                            .filter(endereco -> endereco.getPrincipal() != null && endereco.getPrincipal())
+                            .filter(endereco -> endereco.isDefault())
                             .findFirst()
                             .orElse(this.enderecos.get(0));
     }
@@ -171,7 +184,7 @@ public class User {
         return this.favoritos != null && this.favoritos.contains(livro);
     }
     
-    public boolean isFavorito(Long livroId) {
+    public boolean isFavorito(Integer livroId) {
         if (this.favoritos == null || livroId == null) return false;
         return this.favoritos.stream()
                             .anyMatch(livro -> livroId.equals(livro.getId()));
@@ -200,7 +213,29 @@ public class User {
         }
         
         String cpfLimpo = this.cpf.replaceAll("[^0-9]", "");
-        return cpfLimpo.length() == 11;
+        if (cpfLimpo.length() != 11) return false;
+        
+        // Verifica se todos os dígitos são iguais
+        if (cpfLimpo.chars().distinct().count() == 1) return false;
+        
+        // Calcula primeiro dígito verificador
+        int sum = 0;
+        for (int i = 0; i < 9; i++) {
+            sum += (cpfLimpo.charAt(i) - '0') * (10 - i);
+        }
+        int firstDigit = 11 - (sum % 11);
+        if (firstDigit >= 10) firstDigit = 0;
+        
+        // Calcula segundo dígito verificador
+        sum = 0;
+        for (int i = 0; i < 10; i++) {
+            sum += (cpfLimpo.charAt(i) - '0') * (11 - i);
+        }
+        int secondDigit = 11 - (sum % 11);
+        if (secondDigit >= 10) secondDigit = 0;
+        
+        return (cpfLimpo.charAt(9) - '0') == firstDigit && 
+               (cpfLimpo.charAt(10) - '0') == secondDigit;
     }
     
     // toString para debug
