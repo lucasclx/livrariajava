@@ -47,7 +47,7 @@ public class AuthenticationFilter implements Filter {
         "/orders",
         "/cart",
         "/checkout",
-        "/favoritos"
+        "/favorites"
     );
     
     // URLs que precisam de autenticação de admin
