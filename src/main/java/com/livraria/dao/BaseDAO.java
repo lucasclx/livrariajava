@@ -10,28 +10,23 @@ import java.util.function.Function;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
+import com.livraria.utils.ConnectionFactory;
+
 
 /**
  * Classe base para operações de banco de dados
  */
 public abstract class BaseDAO<T> {
-    protected DataSource dataSource;
-    
-    // Construtor que obtém o DataSource configurado
+
+    // Construtor padrão
     public BaseDAO() {
-        try {
-            Context ctx = new InitialContext();
-            dataSource = (DataSource) ctx.lookup("java:comp/env/jdbc/livraria");
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao configurar DataSource", e);
-        }
     }
-    
+
     /**
      * Obtém uma conexão com o banco de dados
      */
     protected Connection getConnection() throws SQLException {
-        return dataSource.getConnection();
+        return ConnectionFactory.getConnection();
     }
     
     /**
