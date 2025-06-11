@@ -8,7 +8,63 @@ import java.util.List;
 /**
  * DAO para operações com categorias
  */
-public class CategoriaDAO extends BaseDAO {
+public class CategoriaDAO extends BaseDAO<Categoria> {
+
+    @Override
+    protected String getTableName() {
+        return "categorias";
+    }
+
+    @Override
+    public List<Categoria> findAll() {
+        try {
+            return listar();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Categoria findById(Long id) {
+        try {
+            return buscarPorId(id.intValue());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Categoria save(Categoria entity) {
+        try {
+            return criar(entity);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Categoria update(Categoria entity) {
+        try {
+            atualizar(entity);
+            return entity;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean delete(Long id) {
+        try {
+            return excluir(id.intValue());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    protected Categoria mapResultSetToEntity(ResultSet rs) throws SQLException {
+        return mapRowToCategoria(rs);
+    }
     
     /**
      * Busca categoria por ID
