@@ -194,5 +194,16 @@ public abstract class BaseDAO<T> {
             }
             
             rs = stmt.executeQuery();
-            
-            while (
+            while (rs.next()) {
+                items.add(mapResultSetToEntity(rs));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(conn, stmt, rs);
+        }
+
+        return items;
+    }
+}
