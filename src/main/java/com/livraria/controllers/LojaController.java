@@ -3,7 +3,6 @@ package com.livraria.controllers;
 import java.io.IOException;
 import java.util.List;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -14,7 +13,6 @@ import com.livraria.models.Categoria;
 import com.livraria.models.User;
 import com.livraria.utils.PaginationUtil;
 
-@WebServlet({"/", "/loja/*"})
 public class LojaController extends BaseController {
     
     private LivroDAO livroDAO;
@@ -227,7 +225,7 @@ public class LojaController extends BaseController {
                 isFavorito = livroDAO.estaNosfavoritos(livroId, user.getId());
             }
             
-            // Buscar avaliações do livro
+            // Buscar avaliações do livro (descomente se necessário)
             // List<Avaliacao> avaliacoes = avaliacaoDAO.buscarPorLivro(livroId, 1, 10);
             
             request.setAttribute("livro", livro);

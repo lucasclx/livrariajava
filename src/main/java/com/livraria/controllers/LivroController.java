@@ -17,7 +17,6 @@ import com.livraria.models.Categoria;
 import com.livraria.utils.FileUploadUtil;
 import com.livraria.utils.ValidationUtil;
 
-@WebServlet("/admin/livros/*")
 @MultipartConfig(maxFileSize = 2097152) // 2MB
 public class LivroController extends BaseController {
     

@@ -1,5 +1,11 @@
 package com.livraria.models;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+/**
+ * Modelo que representa um Item do Carrinho
+ */
 public class CartItem {
     
     private Integer id;
@@ -18,6 +24,7 @@ public class CartItem {
     // Construtores
     public CartItem() {
         this.stockReserved = false;
+        this.quantity = 1;
     }
     
     public CartItem(Integer cartId, Integer livroId, Integer quantity, BigDecimal price) {
@@ -26,6 +33,16 @@ public class CartItem {
         this.livroId = livroId;
         this.quantity = quantity;
         this.price = price;
+    }
+    
+    public CartItem(Cart cart, Livro livro, Integer quantity) {
+        this();
+        this.cart = cart;
+        this.cartId = cart != null ? cart.getId() : null;
+        this.livro = livro;
+        this.livroId = livro != null ? livro.getId() : null;
+        this.quantity = quantity;
+        this.price = livro != null ? livro.getPrecoFinal() : BigDecimal.ZERO;
     }
     
     // Getters e Setters
@@ -39,7 +56,12 @@ public class CartItem {
     public void setLivroId(Integer livroId) { this.livroId = livroId; }
     
     public Integer getQuantity() { return quantity; }
-    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+    public void setQuantity(Integer quantity) { 
+        if (quantity != null && quantity < 1) {
+            throw new IllegalArgumentException("Quantidade deve ser maior que zero");
+        }
+        this.quantity = quantity; 
+    }
     
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
@@ -54,47 +76,31 @@ public class CartItem {
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
     
     public Cart getCart() { return cart; }
-    public void setCart(Cart cart) { this.cart = cart; }
+    public void setCart(Cart cart) { 
+        this.cart = cart;
+        this.cartId = cart != null ? cart.getId() : null;
+    }
     
     public Livro getLivro() { return livro; }
-    public void setLivro(Livro livro) { this.livro = livro; }
+    public void setLivro(Livro livro) { 
+        this.livro = livro;
+        this.livroId = livro != null ? livro.getId() : null;
+        if (livro != null && this.price == null) {
+            this.price = livro.getPrecoFinal();
+        }
+    }
     
     // Métodos de negócio
     public BigDecimal getSubtotal() {
+        if (price == null || quantity == null) {
+            return BigDecimal.ZERO;
+        }
         return price.multiply(new BigDecimal(quantity));
     }
     
     public String getSubtotalFormatado() {
-        return String.format("R$ %.2f", getSubtotal().doubleValue()).replace(".", ",");
+        return formatarMoeda(getSubtotal());
     }
     
-    public boolean isAvailable() {
-        return livro != null && livro.isAtivo() && livro.getEstoque() >= quantity;
-    }
-    
-    @Override
-    public String toString() {
-        return "CartItem{" +
-                "id=" + id +
-                ", cartId=" + cartId +
-                ", livroId=" + livroId +
-                ", quantity=" + quantity +
-                ", price=" + price +
-                ", subtotal=" + getSubtotal() +
-                '}';
-    }
-    
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        
-        CartItem cartItem = (CartItem) o;
-        return id != null && id.equals(cartItem.id);
-    }
-    
-    @Override
-    public int hashCode() {
-        return id != null ? id.hashCode() : 0;
-    }
-}
+    public String getPriceFormatado() {
+        return formatarMoeda(price != null ? price

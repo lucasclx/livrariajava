@@ -14,7 +14,6 @@ import com.livraria.models.Categoria;
 import com.livraria.utils.FileUploadUtil;
 import com.livraria.utils.SlugUtil;
 
-@WebServlet("/admin/categorias/*")
 @MultipartConfig(maxFileSize = 2097152) // 2MB
 public class CategoriaController extends BaseController {
     

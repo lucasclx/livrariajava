@@ -1,172 +1,231 @@
 package com.livraria.models;
 
-import java.sql.Timestamp;
-import java.util.List;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 
 /**
- * Modelo que representa uma Categoria de livros
+ * Modelo que representa uma Avaliação de livro
  */
-public class Categoria {
-    private Long id;
-    private String nome;
-    private String descricao;
-    private String imagem;
-    private String slug;
-    private Boolean ativo;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+public class Avaliacao {
+    
+    private Integer id;
+    private Integer livroId;
+    private Integer userId;
+    private Integer rating;  // 1 a 5 estrelas
+    private String titulo;
+    private String comentario;
+    private boolean aprovado;
+    private boolean recomenda;
+    private String vantagens;
+    private String desvantagens;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     
     // Relacionamentos
-    private List<Livro> livros;
-    private Integer livrosCount;
+    private Livro livro;
+    private User user;
     
     // Construtores
-    public Categoria() {
-        this.livros = new ArrayList<>();
-        this.ativo = true;
+    public Avaliacao() {
+        this.aprovado = false;
+        this.recomenda = true;
     }
     
-    public Categoria(String nome) {
+    public Avaliacao(Integer livroId, Integer userId, Integer rating, String comentario) {
         this();
-        this.nome = nome;
-        this.slug = gerarSlug(nome);
+        this.livroId = livroId;
+        this.userId = userId;
+        this.rating = rating;
+        this.comentario = comentario;
     }
     
-    public Categoria(String nome, String descricao) {
-        this(nome);
-        this.descricao = descricao;
+    public Avaliacao(Integer livroId, Integer userId, Integer rating, String titulo, String comentario) {
+        this(livroId, userId, rating, comentario);
+        this.titulo = titulo;
     }
     
     // Getters e Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
     
-    public String getNome() { return nome; }
-    public void setNome(String nome) { 
-        this.nome = nome;
-        this.slug = gerarSlug(nome);
+    public Integer getLivroId() { return livroId; }
+    public void setLivroId(Integer livroId) { this.livroId = livroId; }
+    
+    public Integer getUserId() { return userId; }
+    public void setUserId(Integer userId) { this.userId = userId; }
+    
+    public Integer getRating() { return rating; }
+    public void setRating(Integer rating) { 
+        if (rating != null && (rating < 1 || rating > 5)) {
+            throw new IllegalArgumentException("Rating deve estar entre 1 e 5");
+        }
+        this.rating = rating; 
     }
     
-    public String getDescricao() { return descricao; }
-    public void setDescricao(String descricao) { this.descricao = descricao; }
+    public String getTitulo() { return titulo; }
+    public void setTitulo(String titulo) { this.titulo = titulo; }
     
-    public String getImagem() { return imagem; }
-    public void setImagem(String imagem) { this.imagem = imagem; }
+    public String getComentario() { return comentario; }
+    public void setComentario(String comentario) { this.comentario = comentario; }
     
-    public String getSlug() { return slug; }
-    public void setSlug(String slug) { this.slug = slug; }
+    public boolean isAprovado() { return aprovado; }
+    public void setAprovado(boolean aprovado) { this.aprovado = aprovado; }
     
-    public Boolean getAtivo() { return ativo; }
-    public void setAtivo(Boolean ativo) { this.ativo = ativo; }
+    public boolean isRecomenda() { return recomenda; }
+    public void setRecomenda(boolean recomenda) { this.recomenda = recomenda; }
     
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public String getVantagens() { return vantagens; }
+    public void setVantagens(String vantagens) { this.vantagens = vantagens; }
     
-    public Timestamp getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+    public String getDesvantagens() { return desvantagens; }
+    public void setDesvantagens(String desvantagens) { this.desvantagens = desvantagens; }
     
-    public List<Livro> getLivros() { return livros; }
-    public void setLivros(List<Livro> livros) { 
-        this.livros = livros;
-        this.livrosCount = livros != null ? livros.size() : 0;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     
-    public Integer getLivrosCount() { 
-        if (livrosCount != null) return livrosCount;
-        return livros != null ? livros.size() : 0;
-    }
-    public void setLivrosCount(Integer livrosCount) { this.livrosCount = livrosCount; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    
+    public Livro getLivro() { return livro; }
+    public void setLivro(Livro livro) { this.livro = livro; }
+    
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
     
     // Métodos auxiliares
-    public String getImagemUrl() {
-        if (this.imagem != null && !this.imagem.isEmpty()) {
-            return "/livraria/images/categorias/" + this.imagem;
+    public String getRatingStars() {
+        if (rating == null) return "";
+        
+        StringBuilder stars = new StringBuilder();
+        for (int i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                stars.append("★");
+            } else {
+                stars.append("☆");
+            }
         }
-        return "/livraria/assets/images/no-category.png";
+        return stars.toString();
+    }
+    
+    public String getRatingStarsHtml() {
+        if (rating == null) return "";
+        
+        StringBuilder stars = new StringBuilder();
+        for (int i = 1; i <= 5; i++) {
+            if (i <= rating) {
+                stars.append("<i class='fas fa-star text-warning'></i>");
+            } else {
+                stars.append("<i class='far fa-star text-muted'></i>");
+            }
+        }
+        return stars.toString();
     }
     
     public String getStatusTexto() {
-        return this.ativo ? "Ativa" : "Inativa";
+        return aprovado ? "Aprovado" : "Pendente";
     }
     
     public String getStatusCor() {
-        return this.ativo ? "success" : "danger";
+        return aprovado ? "success" : "warning";
     }
     
-    private String gerarSlug(String texto) {
-        if (texto == null || texto.trim().isEmpty()) {
-            return "";
-        }
+    public boolean temComentario() {
+        return comentario != null && !comentario.trim().isEmpty();
+    }
+    
+    public boolean temTitulo() {
+        return titulo != null && !titulo.trim().isEmpty();
+    }
+    
+    public boolean temVantagens() {
+        return vantagens != null && !vantagens.trim().isEmpty();
+    }
+    
+    public boolean temDesvantagens() {
+        return desvantagens != null && !desvantagens.trim().isEmpty();
+    }
+    
+    public String getComentarioResumido(int maxLength) {
+        if (!temComentario()) return "";
         
-        return texto.toLowerCase()
-                   .trim()
-                   .replaceAll("[àáâãäå]", "a")
-                   .replaceAll("[èéêë]", "e")
-                   .replaceAll("[ìíîï]", "i")
-                   .replaceAll("[òóôõö]", "o")
-                   .replaceAll("[ùúûü]", "u")
-                   .replaceAll("[ç]", "c")
-                   .replaceAll("[ñ]", "n")
-                   .replaceAll("[^a-z0-9]", "-")
-                   .replaceAll("-+", "-")
-                   .replaceAll("^-|-$", "");
-    }
-    
-    public void adicionarLivro(Livro livro) {
-        if (this.livros == null) {
-            this.livros = new ArrayList<>();
+        if (comentario.length() <= maxLength) {
+            return comentario;
         }
-        this.livros.add(livro);
-        livro.setCategoria(this);
-        this.livrosCount = this.livros.size();
+        return comentario.substring(0, maxLength) + "...";
     }
     
-    public void removerLivro(Livro livro) {
-        if (this.livros != null) {
-            this.livros.remove(livro);
-            this.livrosCount = this.livros.size();
+    public String getRatingText() {
+        if (rating == null) return "Sem avaliação";
+        
+        switch (rating) {
+            case 1: return "Péssimo";
+            case 2: return "Ruim";
+            case 3: return "Regular";
+            case 4: return "Bom";
+            case 5: return "Excelente";
+            default: return "Indefinido";
         }
     }
     
-    public int getTotalLivros() {
-        return getLivrosCount();
+    public String getRecomendaTexto() {
+        return recomenda ? "Sim" : "Não";
     }
     
-    public int getLivrosAtivos() {
-        if (this.livros == null) return 0;
-        return (int) this.livros.stream()
-                                .filter(livro -> livro.getAtivo() != null && livro.getAtivo())
-                                .count();
+    public String getRecomendaIcon() {
+        return recomenda ? "👍" : "👎";
     }
     
-    public int getLivrosEmEstoque() {
-        if (this.livros == null) return 0;
-        return (int) this.livros.stream()
-                                .filter(livro -> livro.getAtivo() != null && livro.getAtivo())
-                                .filter(livro -> livro.getEstoque() != null && livro.getEstoque() > 0)
-                                .count();
+    public boolean isCompleta() {
+        return rating != null && rating > 0 && temComentario();
     }
     
-    // toString para debug
+    public String getDataFormatada() {
+        if (createdAt == null) return "";
+        
+        java.time.format.DateTimeFormatter formatter = 
+            java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        return createdAt.format(formatter);
+    }
+    
+    public String getDataRelativa() {
+        if (createdAt == null) return "";
+        
+        LocalDateTime now = LocalDateTime.now();
+        java.time.Duration duration = java.time.Duration.between(createdAt, now);
+        
+        long days = duration.toDays();
+        long hours = duration.toHours();
+        long minutes = duration.toMinutes();
+        
+        if (days > 0) {
+            return days + " dia" + (days > 1 ? "s" : "") + " atrás";
+        } else if (hours > 0) {
+            return hours + " hora" + (hours > 1 ? "s" : "") + " atrás";
+        } else if (minutes > 0) {
+            return minutes + " minuto" + (minutes > 1 ? "s" : "") + " atrás";
+        } else {
+            return "Agora mesmo";
+        }
+    }
+    
     @Override
     public String toString() {
-        return "Categoria{" +
+        return "Avaliacao{" +
                 "id=" + id +
-                ", nome='" + nome + '\'' +
-                ", slug='" + slug + '\'' +
-                ", ativo=" + ativo +
-                ", livrosCount=" + getLivrosCount() +
+                ", livroId=" + livroId +
+                ", userId=" + userId +
+                ", rating=" + rating +
+                ", aprovado=" + aprovado +
+                ", recomenda=" + recomenda +
                 '}';
     }
     
-    // equals e hashCode
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Categoria categoria = (Categoria) o;
-        return id != null && id.equals(categoria.id);
+        
+        Avaliacao avaliacao = (Avaliacao) o;
+        return id != null && id.equals(avaliacao.id);
     }
     
     @Override

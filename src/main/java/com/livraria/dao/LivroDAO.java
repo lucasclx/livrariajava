@@ -1,464 +1,370 @@
-package com.livraria.utils;
+package com.livraria.dao;
 
-import javax.servlet.http.Part;
-import java.io.*;
-import java.nio.file.*;
-import java.util.UUID;
+import com.livraria.models.Livro;
+import com.livraria.models.Categoria;
+import java.sql.*;
 import java.util.List;
 import java.util.ArrayList;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
+import java.util.Map;
+import java.util.HashMap;
+import java.math.BigDecimal;
 
 /**
- * Utilitário para upload e manipulação de arquivos
+ * DAO para operações com Livros
  */
-public class FileUploadUtil {
+public class LivroDAO extends BaseDAO<Livro> {
+    private CategoriaDAO categoriaDAO = new CategoriaDAO();
     
-    // Configurações padrão
-    private static final String DEFAULT_UPLOAD_DIR = "/var/livraria/uploads";
-    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    private static final String[] ALLOWED_IMAGE_TYPES = {"jpg", "jpeg", "png", "gif", "webp"};
+    @Override
+    protected String getTableName() {
+        return "livros";
+    }
     
-    // Tamanhos para redimensionamento de imagens
-    public static final int THUMBNAIL_SIZE = 150;
-    public static final int SMALL_SIZE = 300;
-    public static final int MEDIUM_SIZE = 600;
-    public static final int LARGE_SIZE = 1200;
+    @Override
+    public List<Livro> findAll() {
+        String sql = "SELECT * FROM livros ORDER BY titulo ASC";
+        return executeQuery(sql);
+    }
     
-    /**
-     * Faz upload de uma imagem
-     */
-    public static String uploadImage(Part filePart, String subfolder) throws IOException {
-        if (filePart == null || filePart.getSize() == 0) {
-            throw new IllegalArgumentException("Arquivo não informado");
+    @Override
+    public Livro findById(Long id) {
+        String sql = "SELECT * FROM livros WHERE id = ?";
+        return findOne(sql, id);
+    }
+    
+    @Override
+    public Livro save(Livro livro) {
+        String sql = "INSERT INTO livros (titulo, autor, editora, isbn, ano_publicacao, " +
+                    "paginas, preco, preco_promocional, estoque, estoque_minimo, sinopse, " +
+                    "imagem, ativo, destaque, peso, categoria_id, created_at, updated_at) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        
+        Long id = executeInsertAndGetId(sql,
+            livro.getTitulo(),
+            livro.getAutor(),
+            livro.getEditora(),
+            livro.getIsbn(),
+            livro.getAnoPublicacao(),
+            livro.getPaginas(),
+            livro.getPreco(),
+            livro.getPrecoPromocional(),
+            livro.getEstoque(),
+            livro.getEstoqueMinimo(),
+            livro.getSinopse(),
+            livro.getImagem(),
+            livro.getAtivo(),
+            livro.getDestaque(),
+            livro.getPeso(),
+            livro.getCategoriaId()
+        );
+        
+        if (id != null) {
+            livro.setId(id);
+            return livro;
         }
         
-        // Validar tipo do arquivo
-        String originalFileName = getFileName(filePart);
-        if (!isValidImageFile(originalFileName)) {
-            throw new IllegalArgumentException("Tipo de arquivo não permitido. Use: " + String.join(", ", ALLOWED_IMAGE_TYPES));
-        }
+        return null;
+    }
+    
+    @Override
+    public Livro update(Livro livro) {
+        String sql = "UPDATE livros SET titulo = ?, autor = ?, editora = ?, isbn = ?, " +
+                    "ano_publicacao = ?, paginas = ?, preco = ?, preco_promocional = ?, " +
+                    "estoque = ?, estoque_minimo = ?, sinopse = ?, imagem = ?, ativo = ?, " +
+                    "destaque = ?, peso = ?, categoria_id = ?, updated_at = NOW() WHERE id = ?";
         
-        // Validar tamanho
-        if (filePart.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("Arquivo muito grande. Tamanho máximo: " + formatFileSize(MAX_FILE_SIZE));
-        }
+        int affectedRows = executeUpdate(sql,
+            livro.getTitulo(),
+            livro.getAutor(),
+            livro.getEditora(),
+            livro.getIsbn(),
+            livro.getAnoPublicacao(),
+            livro.getPaginas(),
+            livro.getPreco(),
+            livro.getPrecoPromocional(),
+            livro.getEstoque(),
+            livro.getEstoqueMinimo(),
+            livro.getSinopse(),
+            livro.getImagem(),
+            livro.getAtivo(),
+            livro.getDestaque(),
+            livro.getPeso(),
+            livro.getCategoriaId(),
+            livro.getId()
+        );
         
-        // Gerar nome único
-        String extension = getFileExtension(originalFileName);
-        String fileName = generateUniqueFileName(extension);
-        
-        // Criar diretórios se não existirem
-        Path uploadPath = getUploadPath(subfolder);
-        Files.createDirectories(uploadPath);
-        
-        // Caminho completo do arquivo
-        Path filePath = uploadPath.resolve(fileName);
-        
-        try (InputStream inputStream = filePart.getInputStream()) {
-            // Fazer upload do arquivo original
-            Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
-            
-            // Redimensionar imagem se necessário
-            resizeImage(filePath, subfolder, fileName);
-            
-            return fileName;
-        } catch (Exception e) {
-            // Limpar arquivo se houve erro
-            deleteFileIfExists(filePath);
-            throw new IOException("Erro ao fazer upload do arquivo: " + e.getMessage(), e);
-        }
+        return affectedRows > 0 ? livro : null;
+    }
+    
+    @Override
+    public boolean delete(Long id) {
+        String sql = "DELETE FROM livros WHERE id = ?";
+        return executeUpdate(sql, id) > 0;
     }
     
     /**
-     * Upload de múltiplas imagens
+     * Busca livros ativos
      */
-    public static List<String> uploadMultipleImages(List<Part> fileParts, String subfolder) throws IOException {
-        List<String> uploadedFiles = new ArrayList<>();
+    public List<Livro> findAtivos() {
+        String sql = "SELECT * FROM livros WHERE ativo = true ORDER BY titulo ASC";
+        return executeQuery(sql);
+    }
+    
+    /**
+     * Busca livros em estoque
+     */
+    public List<Livro> findEmEstoque() {
+        String sql = "SELECT * FROM livros WHERE ativo = true AND estoque > 0 ORDER BY titulo ASC";
+        return executeQuery(sql);
+    }
+    
+    /**
+     * Busca livros em destaque
+     */
+    public List<Livro> findDestaque(int limit) {
+        String sql = "SELECT * FROM livros WHERE ativo = true AND destaque = true " +
+                    "ORDER BY created_at DESC LIMIT ?";
+        return executeQuery(sql, limit);
+    }
+    
+    /**
+     * Busca livros com promoção
+     */
+    public List<Livro> findComPromocao(int limit) {
+        String sql = "SELECT * FROM livros WHERE ativo = true AND preco_promocional IS NOT NULL " +
+                    "AND preco_promocional > 0 AND preco_promocional < preco " +
+                    "ORDER BY (preco - preco_promocional) DESC LIMIT ?";
+        return executeQuery(sql, limit);
+    }
+    
+    /**
+     * Busca livros por categoria
+     */
+    public List<Livro> findByCategoria(Long categoriaId) {
+        String sql = "SELECT * FROM livros WHERE categoria_id = ? AND ativo = true ORDER BY titulo ASC";
+        return executeQuery(sql, categoriaId);
+    }
+    
+    /**
+     * Busca livros com estoque baixo
+     */
+    public List<Livro> findEstoqueBaixo() {
+        String sql = "SELECT * FROM livros WHERE ativo = true AND estoque <= estoque_minimo " +
+                    "ORDER BY estoque ASC";
+        return executeQuery(sql);
+    }
+    
+    /**
+     * Busca textual em livros
+     */
+    public List<Livro> search(String termo) {
+        if (termo == null || termo.trim().isEmpty()) {
+            return findAtivos();
+        }
         
-        for (Part filePart : fileParts) {
-            try {
-                String fileName = uploadImage(filePart, subfolder);
-                uploadedFiles.add(fileName);
-            } catch (Exception e) {
-                // Limpar arquivos já uploaded em caso de erro
-                for (String uploadedFile : uploadedFiles) {
-                    deleteImage(uploadedFile, subfolder);
-                }
-                throw e;
+        String termoBusca = "%" + termo.toLowerCase() + "%";
+        String sql = "SELECT * FROM livros WHERE ativo = true AND " +
+                    "(LOWER(titulo) LIKE ? OR LOWER(autor) LIKE ? OR LOWER(isbn) LIKE ? OR LOWER(editora) LIKE ?) " +
+                    "ORDER BY " +
+                    "CASE " +
+                    "  WHEN LOWER(titulo) LIKE ? THEN 1 " +
+                    "  WHEN LOWER(autor) LIKE ? THEN 2 " +
+                    "  WHEN LOWER(isbn) LIKE ? THEN 3 " +
+                    "  ELSE 4 " +
+                    "END, titulo ASC";
+        
+        return executeQuery(sql, termoBusca, termoBusca, termoBusca, termoBusca, 
+                           termoBusca, termoBusca, termoBusca);
+    }
+    
+    /**
+     * Busca com filtros avançados
+     */
+    public PaginatedResult<Livro> searchWithFilters(String busca, Long categoriaId, 
+                                                   BigDecimal precoMin, BigDecimal precoMax,
+                                                   Boolean disponivel, Boolean promocao,
+                                                   String ordem, String direcao,
+                                                   int page, int size) {
+        
+        StringBuilder sql = new StringBuilder("SELECT l.* FROM livros l");
+        List<Object> parameters = new ArrayList<>();
+        List<String> conditions = new ArrayList<>();
+        
+        // Sempre filtrar apenas livros ativos
+        conditions.add("l.ativo = true");
+        
+        // Busca textual
+        if (busca != null && !busca.trim().isEmpty()) {
+            String termoBusca = "%" + busca.toLowerCase() + "%";
+            conditions.add("(LOWER(l.titulo) LIKE ? OR LOWER(l.autor) LIKE ? OR LOWER(l.isbn) LIKE ? OR LOWER(l.editora) LIKE ?)");
+            parameters.add(termoBusca);
+            parameters.add(termoBusca);
+            parameters.add(termoBusca);
+            parameters.add(termoBusca);
+        }
+        
+        // Filtro por categoria
+        if (categoriaId != null) {
+            conditions.add("l.categoria_id = ?");
+            parameters.add(categoriaId);
+        }
+        
+        // Filtro por preço
+        if (precoMin != null) {
+            conditions.add("COALESCE(l.preco_promocional, l.preco) >= ?");
+            parameters.add(precoMin);
+        }
+        
+        if (precoMax != null) {
+            conditions.add("COALESCE(l.preco_promocional, l.preco) <= ?");
+            parameters.add(precoMax);
+        }
+        
+        // Filtro por disponibilidade
+        if (disponivel != null && disponivel) {
+            conditions.add("l.estoque > 0");
+        }
+        
+        // Filtro por promoção
+        if (promocao != null && promocao) {
+            conditions.add("l.preco_promocional IS NOT NULL AND l.preco_promocional > 0 AND l.preco_promocional < l.preco");
+        }
+        
+        // Construir WHERE
+        if (!conditions.isEmpty()) {
+            sql.append(" WHERE ").append(String.join(" AND ", conditions));
+        }
+        
+        // Ordenação
+        sql.append(" ORDER BY ");
+        if (ordem != null) {
+            switch (ordem) {
+                case "preco":
+                    sql.append("COALESCE(l.preco_promocional, l.preco)");
+                    break;
+                case "titulo":
+                    sql.append("l.titulo");
+                    break;
+                case "autor":
+                    sql.append("l.autor");
+                    break;
+                case "created_at":
+                    sql.append("l.created_at");
+                    break;
+                default:
+                    sql.append("l.titulo");
             }
-        }
-        
-        return uploadedFiles;
-    }
-    
-    /**
-     * Exclui uma imagem e suas versões redimensionadas
-     */
-    public static boolean deleteImage(String fileName, String subfolder) {
-        if (ValidationUtil.isNullOrEmpty(fileName)) {
-            return false;
-        }
-        
-        boolean success = true;
-        Path uploadPath = getUploadPath(subfolder);
-        
-        // Excluir arquivo original
-        success &= deleteFileIfExists(uploadPath.resolve(fileName));
-        
-        // Excluir versões redimensionadas
-        String nameWithoutExt = getFileNameWithoutExtension(fileName);
-        String extension = getFileExtension(fileName);
-        
-        success &= deleteFileIfExists(uploadPath.resolve(nameWithoutExt + "_thumb." + extension));
-        success &= deleteFileIfExists(uploadPath.resolve(nameWithoutExt + "_small." + extension));
-        success &= deleteFileIfExists(uploadPath.resolve(nameWithoutExt + "_medium." + extension));
-        success &= deleteFileIfExists(uploadPath.resolve(nameWithoutExt + "_large." + extension));
-        
-        return success;
-    }
-    
-    /**
-     * Redimensiona imagem em vários tamanhos
-     */
-    private static void resizeImage(Path originalPath, String subfolder, String fileName) {
-        try {
-            BufferedImage originalImage = ImageIO.read(originalPath.toFile());
-            if (originalImage == null) return;
             
-            String nameWithoutExt = getFileNameWithoutExtension(fileName);
-            String extension = getFileExtension(fileName);
-            Path uploadPath = getUploadPath(subfolder);
-            
-            // Criar thumbnail
-            BufferedImage thumbnail = resizeImage(originalImage, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
-            saveImage(thumbnail, uploadPath.resolve(nameWithoutExt + "_thumb." + extension), extension);
-            
-            // Criar versão pequena
-            BufferedImage small = resizeImageProportional(originalImage, SMALL_SIZE);
-            saveImage(small, uploadPath.resolve(nameWithoutExt + "_small." + extension), extension);
-            
-            // Criar versão média
-            BufferedImage medium = resizeImageProportional(originalImage, MEDIUM_SIZE);
-            saveImage(medium, uploadPath.resolve(nameWithoutExt + "_medium." + extension), extension);
-            
-            // Criar versão grande (se a original for maior)
-            if (originalImage.getWidth() > LARGE_SIZE || originalImage.getHeight() > LARGE_SIZE) {
-                BufferedImage large = resizeImageProportional(originalImage, LARGE_SIZE);
-                saveImage(large, uploadPath.resolve(nameWithoutExt + "_large." + extension), extension);
+            if ("desc".equalsIgnoreCase(direcao)) {
+                sql.append(" DESC");
+            } else {
+                sql.append(" ASC");
             }
-            
-        } catch (Exception e) {
-            // Log do erro, mas não interromper o processo
-            System.err.println("Erro ao redimensionar imagem: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Redimensiona imagem mantendo proporção
-     */
-    private static BufferedImage resizeImageProportional(BufferedImage original, int maxSize) {
-        int width = original.getWidth();
-        int height = original.getHeight();
-        
-        double ratio = Math.min((double) maxSize / width, (double) maxSize / height);
-        
-        int newWidth = (int) (width * ratio);
-        int newHeight = (int) (height * ratio);
-        
-        return resizeImage(original, newWidth, newHeight);
-    }
-    
-    /**
-     * Redimensiona imagem com dimensões específicas
-     */
-    private static BufferedImage resizeImage(BufferedImage original, int width, int height) {
-        Image scaledImage = original.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-        BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        
-        Graphics2D g2d = resizedImage.createGraphics();
-        g2d.drawImage(scaledImage, 0, 0, null);
-        g2d.dispose();
-        
-        return resizedImage;
-    }
-    
-    /**
-     * Salva imagem no disco
-     */
-    private static void saveImage(BufferedImage image, Path path, String format) throws IOException {
-        String formatName = format.toLowerCase();
-        if ("jpg".equals(formatName)) {
-            formatName = "jpeg";
-        }
-        
-        ImageIO.write(image, formatName, path.toFile());
-    }
-    
-    /**
-     * Obtém caminho base para uploads
-     */
-    private static Path getUploadPath(String subfolder) {
-        String baseDir = System.getProperty("upload.base.dir", DEFAULT_UPLOAD_DIR);
-        return Paths.get(baseDir, subfolder);
-    }
-    
-    /**
-     * Gera nome único para arquivo
-     */
-    private static String generateUniqueFileName(String extension) {
-        String uuid = UUID.randomUUID().toString().replace("-", "");
-        String timestamp = String.valueOf(System.currentTimeMillis());
-        return timestamp + "_" + uuid + "." + extension;
-    }
-    
-    /**
-     * Extrai nome do arquivo do Part
-     */
-    private static String getFileName(Part part) {
-        String contentDisposition = part.getHeader("content-disposition");
-        if (contentDisposition != null) {
-            for (String content : contentDisposition.split(";")) {
-                if (content.trim().startsWith("filename")) {
-                    String fileName = content.substring(content.indexOf('=') + 1).trim().replace("\"", "");
-                    return fileName;
-                }
-            }
-        }
-        return "unknown";
-    }
-    
-    /**
-     * Obtém extensão do arquivo
-     */
-    private static String getFileExtension(String fileName) {
-        if (ValidationUtil.isNullOrEmpty(fileName)) return "";
-        
-        int lastDot = fileName.lastIndexOf('.');
-        if (lastDot == -1 || lastDot == fileName.length() - 1) {
-            return "";
-        }
-        
-        return fileName.substring(lastDot + 1).toLowerCase();
-    }
-    
-    /**
-     * Obtém nome do arquivo sem extensão
-     */
-    private static String getFileNameWithoutExtension(String fileName) {
-        if (ValidationUtil.isNullOrEmpty(fileName)) return "";
-        
-        int lastDot = fileName.lastIndexOf('.');
-        if (lastDot == -1) {
-            return fileName;
-        }
-        
-        return fileName.substring(0, lastDot);
-    }
-    
-    /**
-     * Verifica se arquivo é uma imagem válida
-     */
-    private static boolean isValidImageFile(String fileName) {
-        String extension = getFileExtension(fileName);
-        
-        for (String allowedType : ALLOWED_IMAGE_TYPES) {
-            if (allowedType.equals(extension)) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Exclui arquivo se existir
-     */
-    private static boolean deleteFileIfExists(Path path) {
-        try {
-            return Files.deleteIfExists(path);
-        } catch (IOException e) {
-            System.err.println("Erro ao excluir arquivo: " + path + " - " + e.getMessage());
-            return false;
-        }
-    }
-    
-    /**
-     * Formata tamanho de arquivo
-     */
-    private static String formatFileSize(long bytes) {
-        if (bytes < 1024) return bytes + " B";
-        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
-        if (bytes < 1024 * 1024 * 1024) return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
-        return String.format("%.1f GB", bytes / (1024.0 * 1024.0 * 1024.0));
-    }
-    
-    /**
-     * Verifica se arquivo existe
-     */
-    public static boolean fileExists(String fileName, String subfolder) {
-        if (ValidationUtil.isNullOrEmpty(fileName)) return false;
-        
-        Path filePath = getUploadPath(subfolder).resolve(fileName);
-        return Files.exists(filePath);
-    }
-    
-    /**
-     * Obtém URL completa do arquivo
-     */
-    public static String getFileUrl(String fileName, String subfolder, String contextPath) {
-        if (ValidationUtil.isNullOrEmpty(fileName)) {
-            return contextPath + "/assets/images/no-image.png";
-        }
-        
-        return contextPath + "/uploads/" + subfolder + "/" + fileName;
-    }
-    
-    /**
-     * Obtém URL da versão redimensionada
-     */
-    public static String getResizedImageUrl(String fileName, String subfolder, String contextPath, String size) {
-        if (ValidationUtil.isNullOrEmpty(fileName)) {
-            return contextPath + "/assets/images/no-image.png";
-        }
-        
-        String nameWithoutExt = getFileNameWithoutExtension(fileName);
-        String extension = getFileExtension(fileName);
-        String resizedFileName = nameWithoutExt + "_" + size + "." + extension;
-        
-        // Verificar se arquivo redimensionado existe
-        if (fileExists(resizedFileName, subfolder)) {
-            return contextPath + "/uploads/" + subfolder + "/" + resizedFileName;
         } else {
-            // Retornar original se redimensionado não existir
-            return getFileUrl(fileName, subfolder, contextPath);
-        }
-    }
-    
-    /**
-     * Cria backup de arquivo
-     */
-    public static boolean backupFile(String fileName, String subfolder) {
-        if (ValidationUtil.isNullOrEmpty(fileName)) return false;
-        
-        try {
-            Path originalPath = getUploadPath(subfolder).resolve(fileName);
-            Path backupPath = getUploadPath("backup/" + subfolder);
-            
-            Files.createDirectories(backupPath);
-            
-            String timestamp = String.valueOf(System.currentTimeMillis());
-            String backupFileName = timestamp + "_" + fileName;
-            
-            Files.copy(originalPath, backupPath.resolve(backupFileName), StandardCopyOption.REPLACE_EXISTING);
-            
-            return true;
-        } catch (IOException e) {
-            System.err.println("Erro ao criar backup: " + e.getMessage());
-            return false;
-        }
-    }
-    
-    /**
-     * Limpa arquivos antigos (older than X days)
-     */
-    public static void cleanOldFiles(String subfolder, int daysOld) {
-        try {
-            Path uploadPath = getUploadPath(subfolder);
-            if (!Files.exists(uploadPath)) return;
-            
-            long cutoffTime = System.currentTimeMillis() - (daysOld * 24L * 60L * 60L * 1000L);
-            
-            Files.walk(uploadPath)
-                 .filter(Files::isRegularFile)
-                 .filter(path -> {
-                     try {
-                         return Files.getLastModifiedTime(path).toMillis() < cutoffTime;
-                     } catch (IOException e) {
-                         return false;
-                     }
-                 })
-                 .forEach(path -> {
-                     try {
-                         Files.delete(path);
-                         System.out.println("Arquivo antigo removido: " + path);
-                     } catch (IOException e) {
-                         System.err.println("Erro ao remover arquivo antigo: " + path + " - " + e.getMessage());
-                     }
-                 });
-                 
-        } catch (IOException e) {
-            System.err.println("Erro ao limpar arquivos antigos: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Obtém informações do arquivo
-     */
-    public static FileInfo getFileInfo(String fileName, String subfolder) {
-        if (ValidationUtil.isNullOrEmpty(fileName)) return null;
-        
-        try {
-            Path filePath = getUploadPath(subfolder).resolve(fileName);
-            if (!Files.exists(filePath)) return null;
-            
-            FileInfo info = new FileInfo();
-            info.fileName = fileName;
-            info.size = Files.size(filePath);
-            info.lastModified = Files.getLastModifiedTime(filePath).toMillis();
-            info.mimeType = Files.probeContentType(filePath);
-            
-            return info;
-        } catch (IOException e) {
-            return null;
-        }
-    }
-    
-    /**
-     * Classe para informações de arquivo
-     */
-    public static class FileInfo {
-        public String fileName;
-        public long size;
-        public long lastModified;
-        public String mimeType;
-        
-        public String getFormattedSize() {
-            return formatFileSize(size);
+            // Ordenação padrão - relevância se há busca, senão por título
+            if (busca != null && !busca.trim().isEmpty()) {
+                String termoBusca = "%" + busca.toLowerCase() + "%";
+                sql.append("CASE ")
+                   .append("WHEN LOWER(l.titulo) LIKE '").append(termoBusca).append("' THEN 1 ")
+                   .append("WHEN LOWER(l.autor) LIKE '").append(termoBusca).append("' THEN 2 ")
+                   .append("ELSE 3 END, l.titulo ASC");
+            } else {
+                sql.append("l.titulo ASC");
+            }
         }
         
-        public java.util.Date getLastModifiedDate() {
-            return new java.util.Date(lastModified);
+        // Paginação
+        int offset = (page - 1) * size;
+        sql.append(" LIMIT ? OFFSET ?");
+        parameters.add(size);
+        parameters.add(offset);
+        
+        // Executar busca
+        List<Livro> items = executeQuery(sql.toString(), parameters.toArray());
+        
+        // Contar total
+        StringBuilder countSql = new StringBuilder("SELECT COUNT(*) FROM livros l");
+        if (!conditions.isEmpty()) {
+            countSql.append(" WHERE ").append(String.join(" AND ", conditions));
         }
+        
+        List<Object> countParams = parameters.subList(0, parameters.size() - 2); // Remove LIMIT e OFFSET
+        int totalItems = count(countSql.toString(), countParams.toArray());
+        
+        return new PaginatedResult<>(items, page, size, totalItems);
     }
     
     /**
-     * Valida se imagem tem dimensões mínimas
+     * Livros relacionados (mesma categoria)
      */
-    public static boolean validateImageDimensions(Part filePart, int minWidth, int minHeight) {
-        try (InputStream inputStream = filePart.getInputStream()) {
-            BufferedImage image = ImageIO.read(inputStream);
-            if (image == null) return false;
-            
-            return image.getWidth() >= minWidth && image.getHeight() >= minHeight;
-        } catch (Exception e) {
-            return false;
-        }
+    public List<Livro> findRelacionados(Long livroId, Long categoriaId, int limit) {
+        String sql = "SELECT * FROM livros WHERE id != ? AND categoria_id = ? AND ativo = true " +
+                    "AND estoque > 0 ORDER BY RAND() LIMIT ?";
+        return executeQuery(sql, livroId, categoriaId, limit);
     }
     
     /**
-     * Obtém dimensões da imagem
+     * Atualizar estoque
      */
-    public static java.awt.Dimension getImageDimensions(Part filePart) {
-        try (InputStream inputStream = filePart.getInputStream()) {
-            BufferedImage image = ImageIO.read(inputStream);
-            if (image == null) return null;
-            
-            return new java.awt.Dimension(image.getWidth(), image.getHeight());
-        } catch (Exception e) {
-            return null;
+    public boolean updateEstoque(Long id, int novoEstoque) {
+        String sql = "UPDATE livros SET estoque = ?, updated_at = NOW() WHERE id = ?";
+        return executeUpdate(sql, novoEstoque, id) > 0;
+    }
+    
+    /**
+     * Diminuir estoque
+     */
+    public boolean diminuirEstoque(Long id, int quantidade) {
+        String sql = "UPDATE livros SET estoque = estoque - ?, updated_at = NOW() " +
+                    "WHERE id = ? AND estoque >= ?";
+        return executeUpdate(sql, quantidade, id, quantidade) > 0;
+    }
+    
+    /**
+     * Estatísticas
+     */
+    public Map<String, Integer> getEstatisticas() {
+        Map<String, Integer> stats = new HashMap<>();
+        
+        stats.put("total_livros", count("SELECT COUNT(*) FROM livros"));
+        stats.put("livros_ativos", count("SELECT COUNT(*) FROM livros WHERE ativo = true"));
+        stats.put("livros_estoque", count("SELECT COUNT(*) FROM livros WHERE ativo = true AND estoque > 0"));
+        stats.put("livros_destaque", count("SELECT COUNT(*) FROM livros WHERE ativo = true AND destaque = true"));
+        stats.put("estoque_baixo", count("SELECT COUNT(*) FROM livros WHERE ativo = true AND estoque <= estoque_minimo"));
+        
+        return stats;
+    }
+    
+    @Override
+    protected Livro mapResultSetToEntity(ResultSet rs) throws SQLException {
+        Livro livro = new Livro();
+        
+        livro.setId(rs.getLong("id"));
+        livro.setTitulo(rs.getString("titulo"));
+        livro.setAutor(rs.getString("autor"));
+        livro.setEditora(rs.getString("editora"));
+        livro.setIsbn(rs.getString("isbn"));
+        livro.setAnoPublicacao(rs.getObject("ano_publicacao", Integer.class));
+        livro.setPaginas(rs.getObject("paginas", Integer.class));
+        livro.setPreco(rs.getBigDecimal("preco"));
+        livro.setPrecoPromocional(rs.getBigDecimal("preco_promocional"));
+        livro.setEstoque(rs.getInt("estoque"));
+        livro.setEstoqueMinimo(rs.getObject("estoque_minimo", Integer.class));
+        livro.setSinopse(rs.getString("sinopse"));
+        livro.setImagem(rs.getString("imagem"));
+        livro.setAtivo(rs.getBoolean("ativo"));
+        livro.setDestaque(rs.getBoolean("destaque"));
+        livro.setPeso(rs.getObject("peso", Double.class));
+        livro.setCategoriaId(rs.getObject("categoria_id", Long.class));
+        livro.setCreatedAt(rs.getTimestamp("created_at"));
+        livro.setUpdatedAt(rs.getTimestamp("updated_at"));
+        
+        // Carregar categoria se necessário
+        if (livro.getCategoriaId() != null) {
+            Categoria categoria = categoriaDAO.findById(livro.getCategoriaId());
+            livro.setCategoria(categoria);
         }
+        
+        return livro;
     }
 }

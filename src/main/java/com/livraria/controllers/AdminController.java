@@ -17,7 +17,7 @@ import com.livraria.models.Categoria;
 import com.livraria.models.User;
 import com.livraria.models.Order;
 
-@WebServlet({"/admin", "/admin/*"})
+
 public class AdminController extends BaseController {
     
     private LivroDAO livroDAO;
