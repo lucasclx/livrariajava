@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletResponse;
 import com.livraria.dao.UserDAO;
 import com.livraria.dao.OrderDAO;
 import com.livraria.dao.LivroDAO;
-import com.livraria.dao.AvaliacaoDAO;
 import com.livraria.models.User;
 import com.livraria.models.Order;
 import com.livraria.models.Livro;
@@ -24,14 +23,12 @@ public class PerfilController extends BaseController {
     private UserDAO userDAO;
     private OrderDAO orderDAO;
     private LivroDAO livroDAO;
-    private AvaliacaoDAO avaliacaoDAO;
     
     @Override
     public void init() throws ServletException {
         userDAO = new UserDAO();
         orderDAO = new OrderDAO();
         livroDAO = new LivroDAO();
-        avaliacaoDAO = new AvaliacaoDAO();
     }
     
     @Override
@@ -282,25 +279,4 @@ public class PerfilController extends BaseController {
         }
     }
     
-    private void mostrarAvaliacoes(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        try {
-            User user = getAuthenticatedUser(request);
-            int page = getIntParameter(request, "page", 1);
-            int pageSize = 10;
-            
-            List<Avaliacao> avaliacoes = avaliacaoDAO.buscarPorUsuario(user.getId(), page, pageSize);
-            int totalAvaliacoes = avaliacaoDAO.contarPorUsuario(user.getId());
-            
-            request.setAttribute("avaliacoes", avaliacoes);
-            request.setAttribute("currentPage", page);
-            request.setAttribute("totalPages", (int) Math.ceil((double) totalAvaliacoes / pageSize));
-            
-            request.getRequestDispatcher("/perfil/avaliacoes.jsp").forward(request, response);
-            
-        } catch (Exception e) {
-            throw new ServletException("Erro ao carregar avaliações", e);
-        }
-    }
 }
