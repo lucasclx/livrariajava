@@ -1,14 +1,100 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Context>
-    <!-- DataSource para MySQL -->
+<Context antiJARLocking="true" antiResourceLocking="true">
+    
+    <!-- Configuração do DataSource para MySQL -->
     <Resource name="jdbc/livraria"
               auth="Container"
               type="javax.sql.DataSource"
-              maxTotal="20"
-              maxIdle="5"
+              maxTotal="100"
+              maxIdle="30"
               maxWaitMillis="10000"
               username="root"
               password=""
               driverClassName="com.mysql.cj.jdbc.Driver"
-              url="jdbc:mysql://localhost:3306/livraria_db?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=America/Sao_Paulo&amp;useUnicode=true&amp;characterEncoding=UTF-8"/>
+              url="jdbc:mysql://localhost:3306/livraria_db?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=America/Sao_Paulo&amp;useUnicode=true&amp;characterEncoding=UTF-8"
+              validationQuery="SELECT 1"
+              validationQueryTimeout="30"
+              testOnBorrow="true"
+              testOnReturn="false"
+              testWhileIdle="true"
+              timeBetweenEvictionRunsMillis="30000"
+              minEvictableIdleTimeMillis="60000"
+              logAbandoned="true"
+              removeAbandoned="true"
+              removeAbandonedTimeout="60"
+              jdbcInterceptors="org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer"/>
+
+    <!-- Configuração alternativa para H2 Database (para desenvolvimento) -->
+    <!--
+    <Resource name="jdbc/livraria"
+              auth="Container"
+              type="javax.sql.DataSource"
+              maxTotal="100"
+              maxIdle="30"
+              maxWaitMillis="10000"
+              username="sa"
+              password=""
+              driverClassName="org.h2.Driver"
+              url="jdbc:h2:~/livraria_db;AUTO_SERVER=TRUE;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL;DATABASE_TO_LOWER=TRUE"
+              validationQuery="SELECT 1"
+              testOnBorrow="true"/>
+    -->
+
+    <!-- Configuração alternativa para PostgreSQL -->
+    <!--
+    <Resource name="jdbc/livraria"
+              auth="Container"
+              type="javax.sql.DataSource"
+              maxTotal="100"
+              maxIdle="30"
+              maxWaitMillis="10000"
+              username="postgres"
+              password="password"
+              driverClassName="org.postgresql.Driver"
+              url="jdbc:postgresql://localhost:5432/livraria_db"
+              validationQuery="SELECT 1"
+              testOnBorrow="true"/>
+    -->
+
+    <!-- Parâmetros da aplicação -->
+    <Parameter name="app.environment" value="development" override="false"/>
+    <Parameter name="app.debug" value="true" override="false"/>
+    <Parameter name="app.version" value="1.0.0" override="false"/>
+    <Parameter name="app.upload.path" value="/uploads" override="false"/>
+    <Parameter name="app.upload.max.size" value="2097152" override="false"/>
+    
+    <!-- Configurações de segurança -->
+    <Parameter name="app.session.timeout" value="30" override="false"/>
+    <Parameter name="app.security.enabled" value="true" override="false"/>
+    
+    <!-- Configurações de email (para futuro uso) -->
+    <Parameter name="mail.smtp.host" value="localhost" override="false"/>
+    <Parameter name="mail.smtp.port" value="587" override="false"/>
+    <Parameter name="mail.smtp.auth" value="false" override="false"/>
+    <Parameter name="mail.smtp.starttls.enable" value="false" override="false"/>
+    
+    <!-- Configurações de cache -->
+    <Parameter name="cache.enabled" value="true" override="false"/>
+    <Parameter name="cache.timeout" value="300" override="false"/>
+
+    <!-- Manager para desenvolvimento (desativar em produção) -->
+    <Manager pathname="" />
+    
+    <!-- Configurações de recursos estáticos -->
+    <Resources allowLinking="true" 
+               cachingAllowed="true" 
+               cacheMaxSize="100000" 
+               cacheMaxTTL="300000"/>
+
+    <!-- Configuração de logs -->
+    <Valve className="org.apache.catalina.valves.AccessLogValve" 
+           directory="logs"
+           prefix="livraria_access_log" 
+           suffix=".txt"
+           pattern="%h %l %u %t &quot;%r&quot; %s %b" />
+
+    <!-- Valve para desenvolvimento (remover em produção) -->
+    <Valve className="org.apache.catalina.valves.RemoteAddrValve"
+           allow="127\.0\.0\.1|::1|0:0:0:0:0:0:0:1|localhost" />
+
 </Context>
