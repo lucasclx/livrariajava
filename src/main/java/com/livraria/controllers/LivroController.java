@@ -18,6 +18,7 @@ import com.livraria.utils.FileUploadUtil;
 import com.livraria.utils.ValidationUtil;
 
 @MultipartConfig(maxFileSize = 2097152) // 2MB
+@WebServlet("/livros/*")
 public class LivroController extends BaseController {
     
     private LivroDAO livroDAO;

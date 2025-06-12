@@ -19,6 +19,7 @@ import com.livraria.models.Avaliacao;
 import com.livraria.utils.PasswordUtil;
 import com.livraria.utils.ValidationUtil;
 
+@WebServlet("/perfil/*")
 public class PerfilController extends BaseController {
     
     private UserDAO userDAO;

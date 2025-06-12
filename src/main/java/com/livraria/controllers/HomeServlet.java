@@ -2,6 +2,7 @@ package com.livraria.controllers;
 
 import java.io.IOException;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -9,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Servlet para lidar com a página inicial da aplicação
  */
+@WebServlet("/home")
 public class HomeServlet extends HttpServlet {
     
     @Override

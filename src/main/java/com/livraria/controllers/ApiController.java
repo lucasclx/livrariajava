@@ -6,6 +6,7 @@ import com.livraria.models.Categoria;
 import com.livraria.models.Livro;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.util.Map;
 /**
  * Very small REST controller used by the demo application.
  */
+@WebServlet("/api/*")
 public class ApiController extends BaseController {
 
     private LivroDAO livroDAO;
