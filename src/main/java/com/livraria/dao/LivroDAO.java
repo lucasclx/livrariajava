@@ -431,4 +431,274 @@ public class LivroDAO extends BaseDAO<Livro> {
         
         return livro;
     }
+    /**
+     * Busca livros com filtros avançados
+     */
+    public List<Livro> buscarComFiltrosAvancados(String busca, String categoriaId, String precoMin, 
+                                               String precoMax, String ordenacao, int page, int pageSize) 
+            throws SQLException {
+        validatePagination(page, pageSize);
+        
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT l.*, c.nome as categoria_nome FROM livros l ");
+        sql.append("LEFT JOIN categorias c ON l.categoria_id = c.id ");
+        sql.append("WHERE l.ativo = true ");
+        
+        List<Object> params = new ArrayList<>();
+        
+        // Filtro de busca por texto
+        if (busca != null && !busca.trim().isEmpty()) {
+            sql.append("AND (l.titulo LIKE ? OR l.autor LIKE ? OR l.isbn LIKE ? OR l.editora LIKE ? OR l.sinopse LIKE ?) ");
+            String searchTerm = "%" + escapeLike(busca.trim()) + "%";
+            params.add(searchTerm);
+            params.add(searchTerm);
+            params.add(searchTerm);
+            params.add(searchTerm);
+            params.add(searchTerm);
+        }
+        
+        // Filtro de categoria
+        if (categoriaId != null && !categoriaId.trim().isEmpty() && !categoriaId.equals("0")) {
+            sql.append("AND l.categoria_id = ? ");
+            params.add(Integer.parseInt(categoriaId));
+        }
+        
+        // Filtro de preço mínimo
+        if (precoMin != null && !precoMin.trim().isEmpty()) {
+            sql.append("AND COALESCE(l.preco_promocional, l.preco) >= ? ");
+            params.add(Double.parseDouble(precoMin));
+        }
+        
+        // Filtro de preço máximo
+        if (precoMax != null && !precoMax.trim().isEmpty()) {
+            sql.append("AND COALESCE(l.preco_promocional, l.preco) <= ? ");
+            params.add(Double.parseDouble(precoMax));
+        }
+        
+        // Ordenação
+        sql.append("ORDER BY ");
+        if (ordenacao != null) {
+            switch (ordenacao) {
+                case "preco_asc":
+                    sql.append("COALESCE(l.preco_promocional, l.preco) ASC, l.titulo ASC");
+                    break;
+                case "preco_desc":
+                    sql.append("COALESCE(l.preco_promocional, l.preco) DESC, l.titulo ASC");
+                    break;
+                case "titulo":
+                    sql.append("l.titulo ASC");
+                    break;
+                case "autor":
+                    sql.append("l.autor ASC, l.titulo ASC");
+                    break;
+                case "mais_vendidos":
+                    sql.append("l.vendas_total DESC, l.titulo ASC");
+                    break;
+                case "mais_recentes":
+                    sql.append("l.created_at DESC");
+                    break;
+                case "avaliacao":
+                    sql.append("l.avaliacao_media DESC, l.total_avaliacoes DESC, l.titulo ASC");
+                    break;
+                default:
+                    sql.append("l.titulo ASC");
+            }
+        } else {
+            sql.append("l.titulo ASC");
+        }
+        
+        sql.append(buildLimitClause(page, pageSize));
+        
+        return executeQuery(sql.toString(), this::mapRowToLivroComCategoria, params.toArray());
+    }
+
+    /**
+     * Conta livros com filtros avançados
+     */
+    public int contarComFiltrosAvancados(String busca, String categoriaId, String precoMin, String precoMax) 
+            throws SQLException {
+        
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT COUNT(*) FROM livros l WHERE l.ativo = true ");
+        
+        List<Object> params = new ArrayList<>();
+        
+        // Filtro de busca por texto
+        if (busca != null && !busca.trim().isEmpty()) {
+            sql.append("AND (l.titulo LIKE ? OR l.autor LIKE ? OR l.isbn LIKE ? OR l.editora LIKE ? OR l.sinopse LIKE ?) ");
+            String searchTerm = "%" + escapeLike(busca.trim()) + "%";
+            params.add(searchTerm);
+            params.add(searchTerm);
+            params.add(searchTerm);
+            params.add(searchTerm);
+            params.add(searchTerm);
+        }
+        
+        // Filtro de categoria
+        if (categoriaId != null && !categoriaId.trim().isEmpty() && !categoriaId.equals("0")) {
+            sql.append("AND l.categoria_id = ? ");
+            params.add(Integer.parseInt(categoriaId));
+        }
+        
+        // Filtro de preço mínimo
+        if (precoMin != null && !precoMin.trim().isEmpty()) {
+            sql.append("AND COALESCE(l.preco_promocional, l.preco) >= ? ");
+            params.add(Double.parseDouble(precoMin));
+        }
+        
+        // Filtro de preço máximo
+        if (precoMax != null && !precoMax.trim().isEmpty()) {
+            sql.append("AND COALESCE(l.preco_promocional, l.preco) <= ? ");
+            params.add(Double.parseDouble(precoMax));
+        }
+        
+        return executeCountQuery(sql.toString(), params.toArray());
+    }
+
+    /**
+     * Busca por autocomplete
+     */
+    public List<String> buscarSugestoes(String termo, int limit) throws SQLException {
+        String sql = "SELECT DISTINCT " +
+                    "CASE " +
+                    "  WHEN l.titulo LIKE ? THEN l.titulo " +
+                    "  WHEN l.autor LIKE ? THEN l.autor " +
+                    "  WHEN l.editora LIKE ? THEN l.editora " +
+                    "  ELSE l.titulo " +
+                    "END as sugestao " +
+                    "FROM livros l " +
+                    "WHERE l.ativo = true " +
+                    "AND (l.titulo LIKE ? OR l.autor LIKE ? OR l.editora LIKE ?) " +
+                    "ORDER BY " +
+                    "CASE " +
+                    "  WHEN l.titulo LIKE ? THEN 1 " +
+                    "  WHEN l.autor LIKE ? THEN 2 " +
+                    "  ELSE 3 " +
+                    "END, sugestao " +
+                    "LIMIT ?";
+        
+        String searchTerm = "%" + escapeLike(termo) + "%";
+        String startTerm = escapeLike(termo) + "%";
+        
+        return executeQuery(sql, rs -> rs.getString("sugestao"), 
+                           startTerm, startTerm, startTerm, 
+                           searchTerm, searchTerm, searchTerm,
+                           startTerm, startTerm, limit);
+    }
+
+    /**
+     * Busca livros mais vendidos por período
+     */
+    public List<Livro> buscarMaisVendidosPeriodo(int dias, int limit) throws SQLException {
+        String sql = "SELECT l.*, c.nome as categoria_nome, " +
+                    "COALESCE(SUM(oi.quantity), 0) as vendas_periodo " +
+                    "FROM livros l " +
+                    "LEFT JOIN categorias c ON l.categoria_id = c.id " +
+                    "LEFT JOIN order_items oi ON l.id = oi.livro_id " +
+                    "LEFT JOIN orders o ON oi.order_id = o.id " +
+                    "WHERE l.ativo = true " +
+                    "AND (o.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY) OR o.created_at IS NULL) " +
+                    "GROUP BY l.id " +
+                    "ORDER BY vendas_periodo DESC, l.vendas_total DESC, l.titulo " +
+                    "LIMIT ?";
+        
+        return executeQuery(sql, this::mapRowToLivroComCategoria, dias, limit);
+    }
+
+    /**
+     * Busca livros por faixa de preço
+     */
+    public List<Livro> buscarPorFaixaPreco(double precoMin, double precoMax, int limit) throws SQLException {
+        String sql = "SELECT l.*, c.nome as categoria_nome " +
+                    "FROM livros l " +
+                    "LEFT JOIN categorias c ON l.categoria_id = c.id " +
+                    "WHERE l.ativo = true " +
+                    "AND COALESCE(l.preco_promocional, l.preco) BETWEEN ? AND ? " +
+                    "ORDER BY COALESCE(l.preco_promocional, l.preco), l.titulo " +
+                    "LIMIT ?";
+        
+        return executeQuery(sql, this::mapRowToLivroComCategoria, precoMin, precoMax, limit);
+    }
+
+    /**
+     * Busca livros com estoque baixo
+     */
+    public List<Livro> buscarEstoqueBaixo(int limit) throws SQLException {
+        String sql = "SELECT l.*, c.nome as categoria_nome " +
+                    "FROM livros l " +
+                    "LEFT JOIN categorias c ON l.categoria_id = c.id " +
+                    "WHERE l.ativo = true " +
+                    "AND l.estoque > 0 " +
+                    "AND l.estoque <= l.estoque_minimo " +
+                    "ORDER BY l.estoque, l.titulo " +
+                    "LIMIT ?";
+        
+        return executeQuery(sql, this::mapRowToLivroComCategoria, limit);
+    }
+
+    /**
+     * Busca livros sem estoque
+     */
+    public List<Livro> buscarSemEstoque(int limit) throws SQLException {
+        String sql = "SELECT l.*, c.nome as categoria_nome " +
+                    "FROM livros l " +
+                    "LEFT JOIN categorias c ON l.categoria_id = c.id " +
+                    "WHERE l.ativo = true " +
+                    "AND l.estoque = 0 " +
+                    "ORDER BY l.titulo " +
+                    "LIMIT ?";
+        
+        return executeQuery(sql, this::mapRowToLivroComCategoria, limit);
+    }
+
+    /**
+     * Conta livros com estoque
+     */
+    public int contarComEstoque() throws SQLException {
+        return executeCountQuery("SELECT COUNT(*) FROM livros WHERE ativo = true AND estoque > 0");
+    }
+
+    /**
+     * Conta livros com estoque baixo
+     */
+    public int contarEstoqueBaixo() throws SQLException {
+        return executeCountQuery("SELECT COUNT(*) FROM livros WHERE ativo = true AND estoque > 0 AND estoque <= estoque_minimo");
+    }
+
+    /**
+     * Calcula valor total do estoque
+     */
+    public java.math.BigDecimal calcularValorTotalEstoque() throws SQLException {
+        String sql = "SELECT COALESCE(SUM(l.estoque * COALESCE(l.preco_promocional, l.preco)), 0) " +
+                    "FROM livros l WHERE l.ativo = true";
+        
+        List<java.math.BigDecimal> result = executeQuery(sql, rs -> rs.getBigDecimal(1));
+        return result.isEmpty() ? java.math.BigDecimal.ZERO : result.get(0);
+    }
+
+    /**
+     * Busca livros mais vendidos no mês atual
+     */
+    public List<Livro> buscarMaisVendidosMes(int limit) throws SQLException {
+        String sql = "SELECT l.*, c.nome as categoria_nome, " +
+                    "COALESCE(SUM(oi.quantity), 0) as vendas_mes " +
+                    "FROM livros l " +
+                    "LEFT JOIN categorias c ON l.categoria_id = c.id " +
+                    "LEFT JOIN order_items oi ON l.id = oi.livro_id " +
+                    "LEFT JOIN orders o ON oi.order_id = o.id " +
+                    "WHERE l.ativo = true " +
+                    "AND (MONTH(o.created_at) = MONTH(NOW()) AND YEAR(o.created_at) = YEAR(NOW()) OR o.created_at IS NULL) " +
+                    "GROUP BY l.id " +
+                    "ORDER BY vendas_mes DESC, l.titulo " +
+                    "LIMIT ?";
+        
+        return executeQuery(sql, this::mapRowToLivroComCategoria, limit);
+    }
+
+    /**
+     * Contar total de livros
+     */
+    public int contar() throws SQLException {
+        return executeCountQuery("SELECT COUNT(*) FROM livros WHERE ativo = true");
+    }
 }
