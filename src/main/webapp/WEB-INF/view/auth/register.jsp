@@ -1,6 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<c:set var="pageTitle" value="Login" />
+<c:set var="pageTitle" value="Crie sua Conta" />
 
 <!DOCTYPE html>
 <html lang="pt-BR" class="h-100">
@@ -15,33 +15,33 @@
             <div class="col-md-6 col-lg-5">
                 <div class="card shadow-lg">
                     <div class="card-header text-center">
-                        <h2 class="h3 mb-0">Acessar sua Conta</h2>
+                        <h2 class="h3 mb-0">Criar Nova Conta</h2>
                     </div>
                     <div class="card-body p-4 p-md-5">
-                        
-                        <c:if test="${!empty param.error || !empty error}">
-                            <div class="alert alert-danger">${!empty param.error ? param.error : error}</div>
-                        </c:if>
-                        <c:if test="${!empty param.success}">
-                            <div class="alert alert-success">${param.success}</div>
-                        </c:if>
-                        
-                        <form action="${pageContext.request.contextPath}/login" method="POST">
+                        <form action="${pageContext.request.contextPath}/register" method="POST">
+                            <div class="mb-3">
+                                <label for="name" class="form-label fw-bold">Nome Completo</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
                             <div class="mb-3">
                                 <label for="email" class="form-label fw-bold">Email</label>
-                                <input type="email" class="form-control" id="email" name="email" value="${email}" required>
+                                <input type="email" class="form-control" id="email" name="email" required>
                             </div>
-                            <div class="mb-4">
+                            <div class="mb-3">
                                 <label for="password" class="form-label fw-bold">Senha</label>
                                 <input type="password" class="form-control" id="password" name="password" required>
                             </div>
+                             <div class="mb-4">
+                                <label for="password_confirmation" class="form-label fw-bold">Confirme a Senha</label>
+                                <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
+                            </div>
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-primary btn-lg">Entrar</button>
+                                <button type="submit" class="btn btn-primary btn-lg">Criar Conta</button>
                             </div>
                         </form>
-                        <hr class="my-4">
+                         <hr class="my-4">
                         <div class="text-center">
-                            <p class="mb-0">Não tem uma conta? <a href="${pageContext.request.contextPath}/register">Cadastre-se aqui</a></p>
+                            <p class="mb-0">Já tem uma conta? <a href="${pageContext.request.contextPath}/login">Faça o login</a></p>
                         </div>
                     </div>
                 </div>
