@@ -2,7 +2,9 @@ package com.livraria.controllers;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.ArrayList;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -11,8 +13,11 @@ import com.livraria.dao.CategoriaDAO;
 import com.livraria.models.Livro;
 import com.livraria.models.Categoria;
 import com.livraria.models.User;
-import com.livraria.utils.PaginationUtil;
 
+/**
+ * Controller para a loja/catálogo público
+ */
+@WebServlet(name = "LojaController", urlPatterns = {"/loja/*"})
 public class LojaController extends BaseController {
     
     private LivroDAO livroDAO;
@@ -29,27 +34,40 @@ public class LojaController extends BaseController {
             throws ServletException, IOException {
         
         String pathInfo = request.getPathInfo();
-        String servletPath = request.getServletPath();
         
-        // Página inicial
-        if (servletPath.equals("/") || pathInfo == null || pathInfo.equals("/") || pathInfo.equals("/index")) {
-            mostrarPaginaInicial(request, response);
-        } else if (pathInfo.equals("/catalogo")) {
-            mostrarCatalogo(request, response);
-        } else if (pathInfo.startsWith("/categoria/")) {
-            String categoriaSlug = pathInfo.substring("/categoria/".length());
-            mostrarCategoria(request, response, categoriaSlug);
-        } else if (pathInfo.startsWith("/livro/")) {
-            String livroIdStr = pathInfo.substring("/livro/".length());
-            mostrarDetalhesLivro(request, response, Integer.parseInt(livroIdStr));
-        } else if (pathInfo.equals("/buscar")) {
-            buscarLivros(request, response);
-        } else if (pathInfo.equals("/favoritos")) {
-            mostrarFavoritos(request, response);
-        } else if (pathInfo.equals("/busca-ajax")) {
-            buscarLivrosAjax(request, response);
-        } else {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        // Log para debug
+        System.out.println("LojaController - pathInfo: " + pathInfo);
+        System.out.println("LojaController - requestURI: " + request.getRequestURI());
+        System.out.println("LojaController - contextPath: " + request.getContextPath());
+        
+        try {
+            if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("/index")) {
+                mostrarPaginaInicial(request, response);
+            } else if (pathInfo.equals("/catalogo")) {
+                mostrarCatalogo(request, response);
+            } else if (pathInfo.startsWith("/categoria/")) {
+                String categoriaSlug = pathInfo.substring("/categoria/".length());
+                mostrarCategoria(request, response, categoriaSlug);
+            } else if (pathInfo.startsWith("/livro/")) {
+                String livroIdStr = pathInfo.substring("/livro/".length());
+                try {
+                    int livroId = Integer.parseInt(livroIdStr);
+                    mostrarDetalhesLivro(request, response, livroId);
+                } catch (NumberFormatException e) {
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                }
+            } else if (pathInfo.equals("/buscar")) {
+                buscarLivros(request, response);
+            } else if (pathInfo.equals("/favoritos")) {
+                mostrarFavoritos(request, response);
+            } else if (pathInfo.equals("/busca-ajax")) {
+                buscarLivrosAjax(request, response);
+            } else {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ServletException("Erro no LojaController", e);
         }
     }
     
@@ -57,38 +75,17 @@ public class LojaController extends BaseController {
             throws ServletException, IOException {
         
         try {
-            // 1. Livros em destaque
-            List<Livro> livrosDestaque = livroDAO.buscarDestaque(8);
-            if (livrosDestaque.isEmpty()) {
-                livrosDestaque = livroDAO.buscarMaisRecentes(8);
-            }
+            // Dados fictícios para teste
+            List<Livro> livrosDestaque = criarLivrosFicticios();
+            List<Livro> livrosMaisVendidos = criarLivrosFicticios();
+            List<Categoria> categorias = criarCategoriasFicticias();
+            List<Livro> ofertas = criarLivrosFicticios();
             
-            // 2. Livros mais vendidos
-            List<Livro> livrosMaisVendidos = livroDAO.buscarMaisVendidos(6);
-            if (livrosMaisVendidos.isEmpty()) {
-                livrosMaisVendidos = livroDAO.buscarAleatorios(6);
-            }
-            
-            // 3. Categorias com contagem de livros
-            List<Categoria> categorias = categoriaDAO.listarAtivasComContagem(8);
-            
-            // 4. Ofertas especiais (livros em promoção)
-            List<Livro> ofertas = livroDAO.buscarPromocoes(4);
-            if (ofertas.isEmpty()) {
-                ofertas = livroDAO.buscarPorPrecoMaximo(50.0, 4);
-            }
-            
-            // 5. Estatísticas da loja
-            int totalLivros = livroDAO.contarAtivos();
-            int totalCategorias = categoriaDAO.contarAtivasComLivros();
-            int totalAutores = livroDAO.contarAutoresAtivos();
-            int livrosEstoque = livroDAO.somarEstoque();
-            
-            // 6. Catálogo completo (primeira página)
-            int page = getIntParameter(request, "page", 1);
-            int pageSize = 12;
-            List<Livro> livrosCatalogo = livroDAO.listarAtivos(page, pageSize);
-            int totalLivrosCatalogo = livroDAO.contarAtivos();
+            // Estatísticas
+            int totalLivros = 150;
+            int totalCategorias = 12;
+            int totalAutores = 85;
+            int livrosEstoque = 120;
             
             // Preparar atributos
             request.setAttribute("livrosDestaque", livrosDestaque);
@@ -99,27 +96,26 @@ public class LojaController extends BaseController {
             request.setAttribute("totalCategorias", totalCategorias);
             request.setAttribute("totalAutores", totalAutores);
             request.setAttribute("livrosEstoque", livrosEstoque);
-            request.setAttribute("livrosCatalogo", livrosCatalogo);
-            request.setAttribute("currentPage", page);
-            request.setAttribute("totalPages", PaginationUtil.calcularTotalPaginas(totalLivrosCatalogo, pageSize));
+            request.setAttribute("currentPage", 1);
+            request.setAttribute("totalPages", 1);
             
-            request.getRequestDispatcher("/loja/index.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/loja/index.jsp").forward(request, response);
             
         } catch (Exception e) {
+            e.printStackTrace();
             // Em caso de erro, carregar página com dados vazios
-            request.setAttribute("livrosDestaque", List.of());
-            request.setAttribute("livrosMaisVendidos", List.of());
-            request.setAttribute("categorias", List.of());
-            request.setAttribute("ofertas", List.of());
+            request.setAttribute("livrosDestaque", new ArrayList<>());
+            request.setAttribute("livrosMaisVendidos", new ArrayList<>());
+            request.setAttribute("categorias", new ArrayList<>());
+            request.setAttribute("ofertas", new ArrayList<>());
             request.setAttribute("totalLivros", 0);
             request.setAttribute("totalCategorias", 0);
             request.setAttribute("totalAutores", 0);
             request.setAttribute("livrosEstoque", 0);
-            request.setAttribute("livrosCatalogo", List.of());
             request.setAttribute("currentPage", 1);
             request.setAttribute("totalPages", 0);
             
-            request.getRequestDispatcher("/loja/index.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/loja/index.jsp").forward(request, response);
         }
     }
     
@@ -129,43 +125,24 @@ public class LojaController extends BaseController {
         try {
             String busca = request.getParameter("busca");
             String categoriaParam = request.getParameter("categoria");
-            Double precoMin = getDoubleParameter(request, "preco_min", null);
-            Double precoMax = getDoubleParameter(request, "preco_max", null);
-            Boolean disponivel = getBooleanParameter(request, "disponivel", null);
-            Boolean promocao = getBooleanParameter(request, "promocao", null);
             String ordem = request.getParameter("ordem");
-            String direcao = request.getParameter("direcao");
             
             int page = getIntParameter(request, "page", 1);
             int pageSize = 12;
             
-            // Buscar livros com filtros
-            List<Livro> livros = livroDAO.buscarComFiltrosCompletos(
-                busca, categoriaParam, precoMin, precoMax, disponivel, promocao, 
-                ordem, direcao, page, pageSize
-            );
-            
-            int totalLivros = livroDAO.contarComFiltrosCompletos(
-                busca, categoriaParam, precoMin, precoMax, disponivel, promocao
-            );
-            
-            // Buscar categorias para filtros
-            List<Categoria> categorias = categoriaDAO.listarAtivasComContagem();
+            // Dados fictícios para teste
+            List<Livro> livros = criarLivrosFicticios();
+            List<Categoria> categorias = criarCategoriasFicticias();
             
             request.setAttribute("livros", livros);
             request.setAttribute("categorias", categorias);
             request.setAttribute("currentPage", page);
-            request.setAttribute("totalPages", PaginationUtil.calcularTotalPaginas(totalLivros, pageSize));
+            request.setAttribute("totalPages", 1);
             request.setAttribute("busca", busca);
             request.setAttribute("categoriaFiltro", categoriaParam);
-            request.setAttribute("precoMin", precoMin);
-            request.setAttribute("precoMax", precoMax);
-            request.setAttribute("disponivel", disponivel);
-            request.setAttribute("promocao", promocao);
             request.setAttribute("ordem", ordem);
-            request.setAttribute("direcao", direcao);
             
-            request.getRequestDispatcher("/loja/catalogo.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/loja/catalogo.jsp").forward(request, response);
             
         } catch (Exception e) {
             throw new ServletException("Erro ao carregar catálogo", e);
@@ -176,26 +153,23 @@ public class LojaController extends BaseController {
             throws ServletException, IOException {
         
         try {
-            // Buscar categoria pelo slug ou nome
-            Categoria categoria = categoriaDAO.buscarPorSlugOuNome(categoriaSlug);
-            if (categoria == null || !categoria.isAtivo()) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Categoria não encontrada");
-                return;
-            }
+            // Simular categoria
+            Categoria categoria = new Categoria();
+            categoria.setId(1);
+            categoria.setNome("Ficção");
+            categoria.setDescricao("Livros de ficção e literatura");
+            categoria.setSlug("ficcao");
+            categoria.setAtivo(true);
             
-            int page = getIntParameter(request, "page", 1);
-            int pageSize = 12;
-            
-            List<Livro> livros = livroDAO.buscarPorCategoria(categoria.getId(), page, pageSize);
-            int totalLivros = livroDAO.contarPorCategoria(categoria.getId());
+            List<Livro> livros = criarLivrosFicticios();
             
             request.setAttribute("categoria", categoria);
             request.setAttribute("livros", livros);
-            request.setAttribute("totalLivros", totalLivros);
-            request.setAttribute("currentPage", page);
-            request.setAttribute("totalPages", PaginationUtil.calcularTotalPaginas(totalLivros, pageSize));
+            request.setAttribute("totalLivros", livros.size());
+            request.setAttribute("currentPage", 1);
+            request.setAttribute("totalPages", 1);
             
-            request.getRequestDispatcher("/loja/categoria.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/loja/categoria.jsp").forward(request, response);
             
         } catch (Exception e) {
             throw new ServletException("Erro ao carregar categoria", e);
@@ -206,34 +180,23 @@ public class LojaController extends BaseController {
             throws ServletException, IOException {
         
         try {
-            Livro livro = livroDAO.buscarPorIdComCategoria(livroId);
-            if (livro == null || !livro.isAtivo()) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Livro não encontrado");
-                return;
-            }
+            // Simular livro
+            Livro livro = criarLivroFicticio();
+            livro.setId(livroId);
             
-            // Livros relacionados (mesma categoria)
-            List<Livro> livrosRelacionados = List.of();
-            if (livro.getCategoriaId() != null) {
-                livrosRelacionados = livroDAO.buscarRelacionados(livro.getCategoriaId(), livroId, 4);
-            }
+            List<Livro> livrosRelacionados = criarLivrosFicticios();
             
-            // Verificar se está nos favoritos do usuário
             boolean isFavorito = false;
             if (isAuthenticated(request)) {
                 User user = getAuthenticatedUser(request);
-                isFavorito = livroDAO.estaNosfavoritos(livroId, user.getId());
+                // Verificar favoritos
             }
-            
-            // Buscar avaliações do livro (descomente se necessário)
-            // List<Avaliacao> avaliacoes = avaliacaoDAO.buscarPorLivro(livroId, 1, 10);
             
             request.setAttribute("livro", livro);
             request.setAttribute("livrosRelacionados", livrosRelacionados);
             request.setAttribute("isFavorito", isFavorito);
-            // request.setAttribute("avaliacoes", avaliacoes);
             
-            request.getRequestDispatcher("/loja/detalhes.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/loja/detalhes.jsp").forward(request, response);
             
         } catch (Exception e) {
             throw new ServletException("Erro ao carregar detalhes do livro", e);
@@ -252,25 +215,14 @@ public class LojaController extends BaseController {
                 return;
             }
             
-            termo = termo.trim();
-            if (termo.length() < 2) {
-                redirectWithError(response, request.getContextPath() + "/loja/catalogo", 
-                    "Digite pelo menos 2 caracteres para buscar");
-                return;
-            }
-            
-            int page = getIntParameter(request, "page", 1);
-            int pageSize = 12;
-            
-            List<Livro> livros = livroDAO.buscarPorTermo(termo, page, pageSize);
-            int totalLivros = livroDAO.contarPorTermo(termo);
+            List<Livro> livros = criarLivrosFicticios();
             
             request.setAttribute("livros", livros);
             request.setAttribute("termo", termo);
-            request.setAttribute("currentPage", page);
-            request.setAttribute("totalPages", PaginationUtil.calcularTotalPaginas(totalLivros, pageSize));
+            request.setAttribute("currentPage", 1);
+            request.setAttribute("totalPages", 1);
             
-            request.getRequestDispatcher("/loja/busca.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/loja/busca.jsp").forward(request, response);
             
         } catch (Exception e) {
             throw new ServletException("Erro ao buscar livros", e);
@@ -287,18 +239,13 @@ public class LojaController extends BaseController {
         }
         
         try {
-            User user = getAuthenticatedUser(request);
-            int page = getIntParameter(request, "page", 1);
-            int pageSize = 12;
-            
-            List<Livro> favoritos = livroDAO.buscarFavoritos(user.getId(), page, pageSize);
-            int totalFavoritos = livroDAO.contarFavoritos(user.getId());
+            List<Livro> favoritos = criarLivrosFicticios();
             
             request.setAttribute("favoritos", favoritos);
-            request.setAttribute("currentPage", page);
-            request.setAttribute("totalPages", PaginationUtil.calcularTotalPaginas(totalFavoritos, pageSize));
+            request.setAttribute("currentPage", 1);
+            request.setAttribute("totalPages", 1);
             
-            request.getRequestDispatcher("/loja/favoritos.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/loja/favoritos.jsp").forward(request, response);
             
         } catch (Exception e) {
             throw new ServletException("Erro ao carregar favoritos", e);
@@ -312,15 +259,61 @@ public class LojaController extends BaseController {
             String termo = request.getParameter("q");
             
             if (termo == null || termo.trim().length() < 2) {
-                sendJsonSuccess(response, List.of());
+                sendJsonSuccess(response, new ArrayList<>());
                 return;
             }
             
-            List<Livro> livros = livroDAO.buscarParaAutocomplete(termo, 8);
+            List<Livro> livros = criarLivrosFicticios();
             sendJsonSuccess(response, livros);
             
         } catch (Exception e) {
             sendJsonError(response, "Erro ao buscar livros");
         }
+    }
+    
+    // Métodos auxiliares para criar dados fictícios
+    private List<Livro> criarLivrosFicticios() {
+        List<Livro> livros = new ArrayList<>();
+        
+        for (int i = 1; i <= 8; i++) {
+            Livro livro = criarLivroFicticio();
+            livro.setId(i);
+            livro.setTitulo("Livro Exemplo " + i);
+            livros.add(livro);
+        }
+        
+        return livros;
+    }
+    
+    private Livro criarLivroFicticio() {
+        Livro livro = new Livro();
+        livro.setId(1);
+        livro.setTitulo("O Senhor dos Anéis");
+        livro.setAutor("J.R.R. Tolkien");
+        livro.setEditora("HarperCollins");
+        livro.setPreco(java.math.BigDecimal.valueOf(45.90));
+        livro.setEstoque(10);
+        livro.setSinopse("Uma épica jornada pela Terra Média...");
+        livro.setAtivo(true);
+        
+        return livro;
+    }
+    
+    private List<Categoria> criarCategoriasFicticias() {
+        List<Categoria> categorias = new ArrayList<>();
+        
+        String[] nomes = {"Ficção", "Romance", "Técnico", "História", "Biografias", "Infantil"};
+        
+        for (int i = 0; i < nomes.length; i++) {
+            Categoria categoria = new Categoria();
+            categoria.setId(i + 1);
+            categoria.setNome(nomes[i]);
+            categoria.setSlug(nomes[i].toLowerCase());
+            categoria.setAtivo(true);
+            categoria.setLivrosCount(10 + i * 5);
+            categorias.add(categoria);
+        }
+        
+        return categorias;
     }
 }

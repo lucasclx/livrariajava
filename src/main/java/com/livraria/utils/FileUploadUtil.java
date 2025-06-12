@@ -1,5 +1,11 @@
 package com.livraria.utils;
 
+import javax.servlet.http.Part;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.*;
+import java.util.UUID;
+
 public class FileUploadUtil {
 
     private static final String UPLOAD_BASE_PATH = "/uploads/";
@@ -109,8 +115,8 @@ public class FileUploadUtil {
      */
     private static String getUploadPath() {
         // Em um ambiente real, isso deveria vir de configuração
-        String webAppPath = System.getProperty("user.dir") + "/src/main/webapp";
-        return webAppPath + UPLOAD_BASE_PATH;
+        String webAppPath = System.getProperty("catalina.base", System.getProperty("user.dir"));
+        return webAppPath + "/webapps/livrariajava" + UPLOAD_BASE_PATH;
     }
     
     /**
@@ -118,9 +124,9 @@ public class FileUploadUtil {
      */
     public static String getImageUrl(String filename, String folder) {
         if (filename == null || filename.trim().isEmpty()) {
-            return "/livraria/assets/images/placeholder.jpg";
+            return "/livrariajava/assets/images/placeholder.jpg";
         }
-        return "/livraria" + UPLOAD_BASE_PATH + folder + "/" + filename;
+        return "/livrariajava" + UPLOAD_BASE_PATH + folder + "/" + filename;
     }
     
     /**

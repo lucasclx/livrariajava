@@ -4,288 +4,11 @@
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
          http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
          version="4.0">
-    
-    <display-name>Livraria Mil Páginas</display-name>
-    <description>Sistema de Gerenciamento de Livraria</description>
-    
-    <!-- Configuração de encoding UTF-8 -->
-    <filter>
-        <filter-name>EncodingFilter</filter-name>
-        <filter-class>com.livraria.filters.EncodingFilter</filter-class>
-        <init-param>
-            <param-name>encoding</param-name>
-            <param-value>UTF-8</param-value>
-        </init-param>
-    </filter>
-    <filter-mapping>
-        <filter-name>EncodingFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
-    
-    <!-- Filtro de Autenticação -->
-    <filter>
-        <filter-name>AuthenticationFilter</filter-name>
-        <filter-class>com.livraria.filters.AuthenticationFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>AuthenticationFilter</filter-name>
-        <url-pattern>/admin/*</url-pattern>
-        <url-pattern>/livros/*</url-pattern>
-        <url-pattern>/categorias/*</url-pattern>
-        <url-pattern>/usuarios/*</url-pattern>
-        <url-pattern>/relatorios/*</url-pattern>
-    </filter-mapping>
-    
-    <!-- Filtro de Autorização Admin -->
-    <filter>
-        <filter-name>AdminAuthorizationFilter</filter-name>
-        <filter-class>com.livraria.filters.AdminAuthorizationFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>AdminAuthorizationFilter</filter-name>
-        <url-pattern>/admin/*</url-pattern>
-        <url-pattern>/livros/create</url-pattern>
-        <url-pattern>/livros/*/edit</url-pattern>
-        <url-pattern>/livros/*/delete</url-pattern>
-        <url-pattern>/categorias/*</url-pattern>
-        <url-pattern>/usuarios/*</url-pattern>
-        <url-pattern>/relatorios/*</url-pattern>
-    </filter-mapping>
-    
-    <!-- Filtro de Cache Control -->
-    <filter>
-        <filter-name>CacheControlFilter</filter-name>
-        <filter-class>com.livraria.filters.CacheControlFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>CacheControlFilter</filter-name>
-        <url-pattern>*.css</url-pattern>
-        <url-pattern>*.js</url-pattern>
-        <url-pattern>*.png</url-pattern>
-        <url-pattern>*.jpg</url-pattern>
-        <url-pattern>*.jpeg</url-pattern>
-        <url-pattern>*.gif</url-pattern>
-        <url-pattern>*.svg</url-pattern>
-    </filter-mapping>
-    
-    <!-- Servlet Controllers -->
-    
-    <!-- Página inicial da loja -->
-    <servlet>
-        <servlet-name>LojaController</servlet-name>
-        <servlet-class>com.livraria.controllers.LojaController</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>LojaController</servlet-name>
-        <url-pattern>/</url-pattern>
-        <url-pattern>/loja/*</url-pattern>
-    </servlet-mapping>
-    
-    <!-- Gerenciamento de Livros -->
-    <servlet>
-        <servlet-name>LivroController</servlet-name>
-        <servlet-class>com.livraria.controllers.LivroController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>LivroController</servlet-name>
-        <url-pattern>/livros/*</url-pattern>
-    </servlet-mapping>
-    
-    <!-- Gerenciamento de Categorias -->
-    <servlet>
-        <servlet-name>CategoriaController</servlet-name>
-        <servlet-class>com.livraria.controllers.CategoriaController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>CategoriaController</servlet-name>
-        <url-pattern>/categorias/*</url-pattern>
-    </servlet-mapping>
-    
-    <!-- Autenticação -->
-    <servlet>
-        <servlet-name>AuthController</servlet-name>
-        <servlet-class>com.livraria.controllers.auth.AuthController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>AuthController</servlet-name>
-        <url-pattern>/auth/*</url-pattern>
-        <url-pattern>/login</url-pattern>
-        <url-pattern>/logout</url-pattern>
-        <url-pattern>/register</url-pattern>
-    </servlet-mapping>
-    
-    <!-- Carrinho de Compras -->
-    <servlet>
-        <servlet-name>CartController</servlet-name>
-        <servlet-class>com.livraria.controllers.CartController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>CartController</servlet-name>
-        <url-pattern>/cart/*</url-pattern>
-    </servlet-mapping>
-    
-    <!-- Checkout e Pedidos -->
-    <servlet>
-        <servlet-name>CheckoutController</servlet-name>
-        <servlet-class>com.livraria.controllers.CheckoutController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>CheckoutController</servlet-name>
-        <url-pattern>/checkout/*</url-pattern>
-    </servlet-mapping>
-    
-    <!-- Perfil do Usuário -->
-    <servlet>
-        <servlet-name>PerfilController</servlet-name>
-        <servlet-class>com.livraria.controllers.PerfilController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>PerfilController</servlet-name>
-        <url-pattern>/perfil/*</url-pattern>
-        <url-pattern>/orders/*</url-pattern>
-    </servlet-mapping>
-    
-    <!-- Favoritos -->
-    <servlet>
-        <servlet-name>FavoriteController</servlet-name>
-        <servlet-class>com.livraria.controllers.FavoriteController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>FavoriteController</servlet-name>
-        <url-pattern>/favorites/*</url-pattern>
-    </servlet-mapping>
-    
-    <!-- Administração -->
-    <servlet>
-        <servlet-name>AdminController</servlet-name>
-        <servlet-class>com.livraria.controllers.AdminController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>AdminController</servlet-name>
-        <url-pattern>/admin/*</url-pattern>
-        <url-pattern>/dashboard</url-pattern>
-    </servlet-mapping>
-    
-    <!-- API REST -->
-    <servlet>
-        <servlet-name>ApiController</servlet-name>
-        <servlet-class>com.livraria.controllers.ApiController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>ApiController</servlet-name>
-        <url-pattern>/api/*</url-pattern>
-    </servlet-mapping>
-    
-    <!-- Upload de Arquivos -->
-    <servlet>
-        <servlet-name>FileUploadServlet</servlet-name>
-        <servlet-class>com.livraria.controllers.FileUploadServlet</servlet-class>
-        <multipart-config>
-            <max-file-size>10485760</max-file-size> <!-- 10MB -->
-            <max-request-size>52428800</max-request-size> <!-- 50MB -->
-            <file-size-threshold>1048576</file-size-threshold> <!-- 1MB -->
-        </multipart-config>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>FileUploadServlet</servlet-name>
-        <url-pattern>/upload/*</url-pattern>
-    </servlet-mapping>
-    
-    <!-- Configuração do DataSource -->
-    <resource-ref>
-        <description>DB Connection Pool</description>
-        <res-ref-name>jdbc/livraria</res-ref-name>
-        <res-type>javax.sql.DataSource</res-type>
-        <res-auth>Container</res-auth>
-    </resource-ref>
-    
-    <!-- Configurações de Sessão -->
-    <session-config>
-        <session-timeout>30</session-timeout> <!-- 30 minutos -->
-        <cookie-config>
-            <name>LIVRARIA_SESSION</name>
-            <http-only>true</http-only>
-            <secure>false</secure> <!-- true em produção com HTTPS -->
-            <max-age>1800</max-age> <!-- 30 minutos -->
-        </cookie-config>
-        <tracking-mode>COOKIE</tracking-mode>
-    </session-config>
-    
-    <!-- Páginas de Erro -->
-    <error-page>
-        <error-code>404</error-code>
-        <location>/WEB-INF/views/errors/404.jsp</location>
-    </error-page>
-    
-    <error-page>
-        <error-code>500</error-code>
-        <location>/WEB-INF/views/errors/500.jsp</location>
-    </error-page>
-    
-    <error-page>
-        <error-code>403</error-code>
-        <location>/WEB-INF/views/errors/403.jsp</location>
-    </error-page>
-    
-    <error-page>
-        <exception-type>java.lang.Exception</exception-type>
-        <location>/WEB-INF/views/errors/error.jsp</location>
-    </error-page>
-    
-    <!-- Páginas de Boas-vindas -->
-    <welcome-file-list>
-        <welcome-file>index.jsp</welcome-file>
-        <welcome-file>index.html</welcome-file>
-    </welcome-file-list>
-    
-    <!-- Configurações de Segurança -->
-    <security-constraint>
-        <web-resource-collection>
-            <web-resource-name>Admin Area</web-resource-name>
-            <url-pattern>/admin/*</url-pattern>
-            <http-method>GET</http-method>
-            <http-method>POST</http-method>
-            <http-method>PUT</http-method>
-            <http-method>DELETE</http-method>
-        </web-resource-collection>
-        <user-data-constraint>
-            <transport-guarantee>NONE</transport-guarantee> <!-- CONFIDENTIAL em produção -->
-        </user-data-constraint>
-    </security-constraint>
-    
-    <!-- Configurações de MIME Types -->
-    <mime-mapping>
-        <extension>css</extension>
-        <mime-type>text/css</mime-type>
-    </mime-mapping>
-    
-    <mime-mapping>
-        <extension>js</extension>
-        <mime-type>application/javascript</mime-type>
-    </mime-mapping>
-    
-    <mime-mapping>
-        <extension>json</extension>
-        <mime-type>application/json</mime-type>
-    </mime-mapping>
-    
-    <mime-mapping>
-        <extension>svg</extension>
-        <mime-type>image/svg+xml</mime-type>
-    </mime-mapping>
-    
-    <mime-mapping>
-        <extension>woff</extension>
-        <mime-type>application/font-woff</mime-type>
-    </mime-mapping>
-    
-    <mime-mapping>
-        <extension>woff2</extension>
-        <mime-type>application/font-woff2</mime-type>
-    </mime-mapping>
-    
-    <!-- Context Parameters -->
+
+    <display-name>Livraria Java</display-name>
+    <description>Sistema de Livraria Online</description>
+
+    <!-- Configurações da aplicação -->
     <context-param>
         <param-name>app.name</param-name>
         <param-value>Livraria Mil Páginas</param-value>
@@ -295,70 +18,166 @@
         <param-name>app.version</param-name>
         <param-value>1.0.0</param-value>
     </context-param>
+
+    <!-- Página inicial -->
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+
+    <!-- DataSource JNDI -->
+    <resource-ref>
+        <description>Livraria Database</description>
+        <res-ref-name>jdbc/livraria</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+    </resource-ref>
+
+    <!-- Filtros -->
+    <filter>
+        <filter-name>EncodingFilter</filter-name>
+        <filter-class>com.livraria.filters.EncodingFilter</filter-class>
+        <init-param>
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+    </filter>
     
-    <context-param>
-        <param-name>upload.directory</param-name>
-        <param-value>/uploads</param-value>
-    </context-param>
+    <filter-mapping>
+        <filter-name>EncodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!-- Controllers/Servlets -->
+    <servlet>
+        <servlet-name>LojaController</servlet-name>
+        <servlet-class>com.livraria.controllers.LojaController</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
     
-    <context-param>
-        <param-name>max.upload.size</param-name>
-        <param-value>10485760</param-value> <!-- 10MB -->
-    </context-param>
+    <servlet-mapping>
+        <servlet-name>LojaController</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
     
-    <context-param>
-        <param-name>pagination.default.size</param-name>
-        <param-value>12</param-value>
-    </context-param>
+    <servlet-mapping>
+        <servlet-name>LojaController</servlet-name>
+        <url-pattern>/loja/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminController</servlet-name>
+        <servlet-class>com.livraria.controllers.AdminController</servlet-class>
+    </servlet>
     
-    <context-param>
-        <param-name>pagination.max.size</param-name>
-        <param-value>100</param-value>
-    </context-param>
+    <servlet-mapping>
+        <servlet-name>AdminController</servlet-name>
+        <url-pattern>/admin/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AuthController</servlet-name>
+        <servlet-class>com.livraria.controllers.auth.AuthController</servlet-class>
+    </servlet>
     
-    <!-- Listener para inicialização da aplicação -->
+    <servlet-mapping>
+        <servlet-name>AuthController</servlet-name>
+        <url-pattern>/login</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>AuthController</servlet-name>
+        <url-pattern>/register</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>AuthController</servlet-name>
+        <url-pattern>/logout</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>CartController</servlet-name>
+        <servlet-class>com.livraria.controllers.CartController</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>CartController</servlet-name>
+        <url-pattern>/cart/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>LivroController</servlet-name>
+        <servlet-class>com.livraria.controllers.LivroController</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>LivroController</servlet-name>
+        <url-pattern>/admin/livros/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>CategoriaController</servlet-name>
+        <servlet-class>com.livraria.controllers.CategoriaController</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>CategoriaController</servlet-name>
+        <url-pattern>/admin/categorias/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ApiController</servlet-name>
+        <servlet-class>com.livraria.controllers.ApiController</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>ApiController</servlet-name>
+        <url-pattern>/api/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>PerfilController</servlet-name>
+        <servlet-class>com.livraria.controllers.PerfilController</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>PerfilController</servlet-name>
+        <url-pattern>/perfil/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>FavoriteController</servlet-name>
+        <servlet-class>com.livraria.controllers.FavoriteController</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>FavoriteController</servlet-name>
+        <url-pattern>/favorites/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- Listeners -->
     <listener>
         <listener-class>com.livraria.listeners.ApplicationContextListener</listener-class>
     </listener>
     
-    <!-- Listener para sessão -->
     <listener>
         <listener-class>com.livraria.listeners.SessionListener</listener-class>
     </listener>
+
+    <!-- Configurações de sessão -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+
+    <!-- Páginas de erro -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/error/404.jsp</location>
+    </error-page>
     
-    <!-- Configurações de Compressão GZIP -->
-    <filter>
-        <filter-name>GzipFilter</filter-name>
-        <filter-class>com.livraria.filters.GzipFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>GzipFilter</filter-name>
-        <url-pattern>*.css</url-pattern>
-        <url-pattern>*.js</url-pattern>
-        <url-pattern>*.html</url-pattern>
-        <url-pattern>*.jsp</url-pattern>
-    </filter-mapping>
-    
-    <!-- Configurações de CORS para APIs -->
-    <filter>
-        <filter-name>CorsFilter</filter-name>
-        <filter-class>com.livraria.filters.CorsFilter</filter-class>
-        <init-param>
-            <param-name>allowedOrigins</param-name>
-            <param-value>*</param-value>
-        </init-param>
-        <init-param>
-            <param-name>allowedMethods</param-name>
-            <param-value>GET,POST,PUT,DELETE,OPTIONS</param-value>
-        </init-param>
-        <init-param>
-            <param-name>allowedHeaders</param-name>
-            <param-value>Content-Type,Authorization,X-Requested-With</param-value>
-        </init-param>
-    </filter>
-    <filter-mapping>
-        <filter-name>CorsFilter</filter-name>
-        <url-pattern>/api/*</url-pattern>
-    </filter-mapping>
-    
+    <error-page>
+        <error-code>500</error-code>
+        <location>/error/500.jsp</location>
+    </error-page>
+
 </web-app>
