@@ -46,7 +46,7 @@
                             <div class="d-flex align-items-center mb-3">
                                <span class="price display-6 me-3">${livro.precoFormatado}</span>
                                <%-- Lógica para preço promocional (se houver) --%>
-                               <c:if test="${livro.temPromocao()}">
+                               <c:if test="${livro.temPromocao}">
                                     <span class="old-price text-muted fs-5">${livro.preco}</span>
                                </c:if>
                             </div>
