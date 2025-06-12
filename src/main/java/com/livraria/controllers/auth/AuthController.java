@@ -75,7 +75,7 @@ public class AuthController extends BaseController {
             return;
         }
         
-        request.getRequestDispatcher("/auth/login.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/view/auth/login.jsp").forward(request, response);
     }
     
     private void mostrarRegistro(HttpServletRequest request, HttpServletResponse response)
@@ -87,7 +87,7 @@ public class AuthController extends BaseController {
             return;
         }
         
-        request.getRequestDispatcher("/auth/register.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/view/auth/register.jsp").forward(request, response);
     }
     
     private void processarLogin(HttpServletRequest request, HttpServletResponse response)
@@ -102,7 +102,7 @@ public class AuthController extends BaseController {
             if (!ValidationUtil.isValidEmail(email)) {
                 request.setAttribute("error", "Email inválido");
                 request.setAttribute("email", email);
-                request.getRequestDispatcher("/auth/login.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/view/auth/login.jsp").forward(request, response);
                 return;
             }
             
@@ -111,7 +111,7 @@ public class AuthController extends BaseController {
             if (user == null) {
                 request.setAttribute("error", "Email ou senha incorretos");
                 request.setAttribute("email", email);
-                request.getRequestDispatcher("/auth/login.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/view/auth/login.jsp").forward(request, response);
                 return;
             }
             
@@ -119,7 +119,7 @@ public class AuthController extends BaseController {
             if (!PasswordUtil.verify(password, user.getPassword())) {
                 request.setAttribute("error", "Email ou senha incorretos");
                 request.setAttribute("email", email);
-                request.getRequestDispatcher("/auth/login.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/view/auth/login.jsp").forward(request, response);
                 return;
             }
             
@@ -127,7 +127,7 @@ public class AuthController extends BaseController {
             if (!user.isAtivo()) {
                 request.setAttribute("error", "Conta desativada. Entre em contato com o suporte");
                 request.setAttribute("email", email);
-                request.getRequestDispatcher("/auth/login.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/view/auth/login.jsp").forward(request, response);
                 return;
             }
             
@@ -153,7 +153,7 @@ public class AuthController extends BaseController {
             
         } catch (Exception e) {
             request.setAttribute("error", "Erro interno. Tente novamente");
-            request.getRequestDispatcher("/auth/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/view/auth/login.jsp").forward(request, response);
         }
     }
     
@@ -170,28 +170,28 @@ public class AuthController extends BaseController {
             if (name.length() < 2 || name.length() > 255) {
                 request.setAttribute("error", "Nome deve ter entre 2 e 255 caracteres");
                 preencherCamposRegistro(request, name, email);
-                request.getRequestDispatcher("/auth/register.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/view/auth/register.jsp").forward(request, response);
                 return;
             }
             
             if (!ValidationUtil.isValidEmail(email)) {
                 request.setAttribute("error", "Email inválido");
                 preencherCamposRegistro(request, name, email);
-                request.getRequestDispatcher("/auth/register.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/view/auth/register.jsp").forward(request, response);
                 return;
             }
             
             if (password.length() < 8) {
                 request.setAttribute("error", "Senha deve ter pelo menos 8 caracteres");
                 preencherCamposRegistro(request, name, email);
-                request.getRequestDispatcher("/auth/register.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/view/auth/register.jsp").forward(request, response);
                 return;
             }
             
             if (!password.equals(passwordConfirmation)) {
                 request.setAttribute("error", "Confirmação de senha não confere");
                 preencherCamposRegistro(request, name, email);
-                request.getRequestDispatcher("/auth/register.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/view/auth/register.jsp").forward(request, response);
                 return;
             }
             
@@ -199,7 +199,7 @@ public class AuthController extends BaseController {
             if (userDAO.emailJaExiste(email)) {
                 request.setAttribute("error", "Email já está em uso");
                 preencherCamposRegistro(request, name, email);
-                request.getRequestDispatcher("/auth/register.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/view/auth/register.jsp").forward(request, response);
                 return;
             }
             
@@ -226,7 +226,7 @@ public class AuthController extends BaseController {
             
         } catch (Exception e) {
             request.setAttribute("error", "Erro interno. Tente novamente");
-            request.getRequestDispatcher("/auth/register.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/view/auth/register.jsp").forward(request, response);
         }
     }
     
