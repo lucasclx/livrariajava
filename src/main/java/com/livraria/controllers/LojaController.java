@@ -72,7 +72,7 @@ public class LojaController extends BaseController {
         request.setAttribute("livrosMaisVendidos", livrosMaisVendidos);
         request.setAttribute("categorias", categorias);
         
-        request.getRequestDispatcher("/WEB-INF/views/loja/index.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/view/loja/index.jsp").forward(request, response);
     }
     
     private void mostrarCatalogo(HttpServletRequest request, HttpServletResponse response)
@@ -89,7 +89,7 @@ public class LojaController extends BaseController {
         request.setAttribute("totalPages", (int) Math.ceil((double) totalLivros / pageSize));
         request.setAttribute("baseUrl", request.getContextPath() + "/loja/catalogo");
 
-        request.getRequestDispatcher("/WEB-INF/views/loja/catalogo.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/view/loja/catalogo.jsp").forward(request, response);
     }
     
     private void mostrarCategoria(HttpServletRequest request, HttpServletResponse response, String categoriaSlug)
@@ -113,7 +113,7 @@ public class LojaController extends BaseController {
         request.setAttribute("totalPages", (int) Math.ceil((double) totalLivros / pageSize));
         request.setAttribute("baseUrl", request.getContextPath() + "/loja/categoria/" + categoria.getSlug());
 
-        request.getRequestDispatcher("/WEB-INF/views/loja/categoria.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/view/loja/categoria.jsp").forward(request, response);
     }
     
     private void mostrarDetalhesLivro(HttpServletRequest request, HttpServletResponse response, int livroId)
@@ -137,7 +137,7 @@ public class LojaController extends BaseController {
         request.setAttribute("livrosRelacionados", livrosRelacionados);
         request.setAttribute("isFavorito", isFavorito);
         
-        request.getRequestDispatcher("/WEB-INF/views/loja/detalhes.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/view/loja/detalhes.jsp").forward(request, response);
     }
     
     private void buscarLivros(HttpServletRequest request, HttpServletResponse response)
@@ -162,7 +162,7 @@ public class LojaController extends BaseController {
         request.setAttribute("totalPages", (int) Math.ceil((double) totalLivros / pageSize));
         request.setAttribute("baseUrl", request.getContextPath() + "/loja/buscar?q=" + java.net.URLEncoder.encode(termo, "UTF-8"));
         
-        request.getRequestDispatcher("/WEB-INF/views/loja/busca.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/view/loja/busca.jsp").forward(request, response);
     }
     
     private void mostrarFavoritos(HttpServletRequest request, HttpServletResponse response)
@@ -185,6 +185,6 @@ public class LojaController extends BaseController {
         request.setAttribute("totalPages", (int) Math.ceil((double) totalFavoritos / pageSize));
         request.setAttribute("baseUrl", request.getContextPath() + "/loja/favoritos");
 
-        request.getRequestDispatcher("/WEB-INF/views/loja/favoritos.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/view/loja/favoritos.jsp").forward(request, response);
     }
 }
