@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Servlet para redirecionar a página inicial
  */
-@WebServlet(urlPatterns = {"", "/", "/index", "/home"})
+
 public class IndexServlet extends HttpServlet {
     
     @Override

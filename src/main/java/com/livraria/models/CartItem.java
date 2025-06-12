@@ -99,8 +99,10 @@ public class CartItem {
     }
     
     public String getSubtotalFormatado() {
-        return formatarMoeda(getSubtotal());
+        return String.format("R$ %.2f", getSubtotal().doubleValue()).replace(".", ",");
     }
     
     public String getPriceFormatado() {
-        return formatarMoeda(price != null ? price
+        return String.format("R$ %.2f", (price != null ? price.doubleValue() : 0.0)).replace(".", ",");
+    }
+}
