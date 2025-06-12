@@ -16,6 +16,7 @@ import com.livraria.models.CartItem;
 import com.livraria.models.Livro;
 import com.livraria.models.User;
 
+@WebServlet("/cart/*")
 public class CartController extends BaseController {
     
     private CartDAO cartDAO;

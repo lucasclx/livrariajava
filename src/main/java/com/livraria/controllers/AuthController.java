@@ -2,6 +2,7 @@ package com.livraria.controllers.auth;
 
 import java.io.IOException;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -12,6 +13,7 @@ import com.livraria.models.User;
 import com.livraria.utils.PasswordUtil;
 import com.livraria.utils.ValidationUtil;
 
+@WebServlet(urlPatterns = {"/login", "/register", "/logout"})
 public class AuthController extends BaseController {
     
     private UserDAO userDAO;

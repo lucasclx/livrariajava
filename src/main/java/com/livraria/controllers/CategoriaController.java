@@ -15,6 +15,7 @@ import com.livraria.utils.FileUploadUtil;
 import com.livraria.utils.SlugUtil;
 
 @MultipartConfig(maxFileSize = 2097152) // 2MB
+@WebServlet("/categorias/*")
 public class CategoriaController extends BaseController {
     
     private CategoriaDAO categoriaDAO;

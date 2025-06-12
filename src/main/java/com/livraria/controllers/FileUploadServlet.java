@@ -4,6 +4,7 @@ import com.livraria.utils.FileUploadUtil;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -16,6 +17,7 @@ import java.util.Map;
  * Simple servlet to handle file uploads using {@link FileUploadUtil}.
  */
 @MultipartConfig
+@WebServlet("/upload")
 public class FileUploadServlet extends HttpServlet {
 
     @Override

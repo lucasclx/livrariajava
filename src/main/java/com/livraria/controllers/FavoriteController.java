@@ -11,6 +11,7 @@ import com.livraria.dao.FavoriteDAO;
 import com.livraria.models.Livro;
 import com.livraria.models.User;
 
+@WebServlet("/favorites/*")
 public class FavoriteController extends BaseController {
 
     private LivroDAO livroDAO;
