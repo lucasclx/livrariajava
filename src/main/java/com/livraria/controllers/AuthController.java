@@ -65,7 +65,7 @@ public class AuthController extends BaseController {
             return;
         }
         // CAMINHO CORRIGIDO AQUI
-        request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/view/auth/login.jsp").forward(request, response);
     }
     
     private void mostrarRegistro(HttpServletRequest request, HttpServletResponse response)
@@ -75,7 +75,7 @@ public class AuthController extends BaseController {
             return;
         }
         // CAMINHO CORRIGIDO AQUI
-        request.getRequestDispatcher("/WEB-INF/views/auth/register.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/view/auth/register.jsp").forward(request, response);
     }
     
     private void processarLogin(HttpServletRequest request, HttpServletResponse response)
