@@ -2,7 +2,7 @@ package com.livraria.controllers.auth;
 
 import java.io.IOException;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
+// import javax.servlet.annotation.WebServlet; // REMOVIDO PARA EVITAR CONFLITO
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -13,7 +13,7 @@ import com.livraria.models.User;
 import com.livraria.utils.PasswordUtil;
 import com.livraria.utils.ValidationUtil;
 
-@WebServlet(urlPatterns = {"/login", "/register", "/logout"})
+// @WebServlet(urlPatterns = {"/login", "/register", "/logout"}) // REMOVIDO
 public class AuthController extends BaseController {
     
     private UserDAO userDAO;
@@ -66,7 +66,6 @@ public class AuthController extends BaseController {
             response.sendRedirect(request.getContextPath() + "/");
             return;
         }
-        // CAMINHO CORRIGIDO AQUI
         request.getRequestDispatcher("/WEB-INF/view/auth/login.jsp").forward(request, response);
     }
     
@@ -76,7 +75,6 @@ public class AuthController extends BaseController {
             response.sendRedirect(request.getContextPath() + "/");
             return;
         }
-        // CAMINHO CORRIGIDO AQUI
         request.getRequestDispatcher("/WEB-INF/view/auth/register.jsp").forward(request, response);
     }
     
@@ -120,6 +118,7 @@ public class AuthController extends BaseController {
     private void processarRegistro(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Implementação do registro (semelhante ao processarLogin)
+        // Esta funcionalidade está implementada no RegisterController.java
     }
     
     private void realizarLogout(HttpServletRequest request, HttpServletResponse response)

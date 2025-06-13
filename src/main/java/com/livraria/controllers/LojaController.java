@@ -3,7 +3,6 @@ package com.livraria.controllers;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -49,8 +48,6 @@ public class LojaController extends BaseController {
                 mostrarDetalhesLivro(request, response, Integer.parseInt(livroIdStr));
             } else if (pathInfo.equals("/buscar")) {
                 buscarLivros(request, response);
-            } else if (pathInfo.equals("/favoritos")) {
-                 mostrarFavoritos(request, response);
             } else {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
@@ -163,28 +160,5 @@ public class LojaController extends BaseController {
         request.setAttribute("baseUrl", request.getContextPath() + "/loja/buscar?q=" + java.net.URLEncoder.encode(termo, "UTF-8"));
         
         request.getRequestDispatcher("/WEB-INF/view/loja/busca.jsp").forward(request, response);
-    }
-    
-    private void mostrarFavoritos(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException, SQLException {
-        
-        User user = getAuthenticatedUser(request);
-        if (user == null) {
-            response.sendRedirect(request.getContextPath() + "/login?redirect=" + request.getRequestURI());
-            return;
-        }
-
-        int page = getIntParameter(request, "page", 1);
-        int pageSize = 12;
-
-        List<Livro> favoritos = livroDAO.buscarFavoritos(user.getId(), page, pageSize);
-        int totalFavoritos = livroDAO.contarFavoritos(user.getId());
-
-        request.setAttribute("favoritos", favoritos);
-        request.setAttribute("currentPage", page);
-        request.setAttribute("totalPages", (int) Math.ceil((double) totalFavoritos / pageSize));
-        request.setAttribute("baseUrl", request.getContextPath() + "/loja/favoritos");
-
-        request.getRequestDispatcher("/WEB-INF/view/loja/favoritos.jsp").forward(request, response);
     }
 }

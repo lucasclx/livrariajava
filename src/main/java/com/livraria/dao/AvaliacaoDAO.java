@@ -1,6 +1,7 @@
 package com.livraria.dao;
 
 import com.livraria.models.Avaliacao;
+import com.livraria.models.Livro;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -13,49 +14,6 @@ public class AvaliacaoDAO extends BaseDAO<Avaliacao> {
     @Override
     protected String getTableName() {
         return "avaliacoes";
-    }
-
-    @Override
-    public List<Avaliacao> findAll() {
-        String sql = "SELECT * FROM avaliacoes ORDER BY created_at DESC";
-        return executeQuery(sql, this::mapRowToAvaliacao);
-    }
-
-    @Override
-    public Avaliacao findById(Long id) {
-        try {
-            return buscarPorId(id.intValue());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public Avaliacao save(Avaliacao entity) {
-        try {
-            return criar(entity);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public Avaliacao update(Avaliacao entity) {
-        try {
-            atualizar(entity);
-            return entity;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public boolean delete(Long id) {
-        try {
-            return excluir(id.intValue());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
@@ -124,65 +82,31 @@ public class AvaliacaoDAO extends BaseDAO<Avaliacao> {
     }
     
     /**
-     * Conta avaliações por usuário
+     * Conta o total de avaliações feitas por um usuário
      */
     public int contarPorUsuario(int userId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM avaliacoes WHERE user_id = ?";
         return executeCountQuery(sql, userId);
     }
-    
+
     /**
-     * Busca avaliações por livro
+     * Busca avaliações de um usuário, com dados do livro, e com paginação
      */
-    public List<Avaliacao> buscarPorLivro(int livroId, int page, int pageSize) throws SQLException {
+    public List<Avaliacao> buscarPorUsuarioComLivro(int userId, int page, int pageSize) throws SQLException {
         validatePagination(page, pageSize);
         
-        String sql = "SELECT a.*, u.name as user_name FROM avaliacoes a " +
-                    "JOIN users u ON a.user_id = u.id " +
-                    "WHERE a.livro_id = ? AND a.aprovado = true " +
-                    "ORDER BY a.created_at DESC" +
-                    buildLimitClause(page, pageSize);
+        String sql = "SELECT a.*, l.titulo as livro_titulo, l.imagem as livro_imagem " +
+                     "FROM avaliacoes a " +
+                     "JOIN livros l ON a.livro_id = l.id " +
+                     "WHERE a.user_id = ? " +
+                     "ORDER BY a.created_at DESC" +
+                     buildLimitClause(page, pageSize);
         
-        return executeQuery(sql, this::mapRowToAvaliacaoComUser, livroId);
+        return executeQuery(sql, this::mapRowToAvaliacaoComLivro, userId);
     }
-    
+
     /**
-     * Busca avaliações pendentes de aprovação
-     */
-    public List<Avaliacao> buscarPendentes(int page, int pageSize) throws SQLException {
-        validatePagination(page, pageSize);
-        
-        String sql = "SELECT a.*, l.titulo as livro_titulo, u.name as user_name " +
-                    "FROM avaliacoes a " +
-                    "JOIN livros l ON a.livro_id = l.id " +
-                    "JOIN users u ON a.user_id = u.id " +
-                    "WHERE a.aprovado = false " +
-                    "ORDER BY a.created_at DESC" +
-                    buildLimitClause(page, pageSize);
-        
-        return executeQuery(sql, this::mapRowToAvaliacaoCompleta);
-    }
-    
-    /**
-     * Aprova avaliação
-     */
-    public boolean aprovar(int id) throws SQLException {
-        String sql = "UPDATE avaliacoes SET aprovado = true, updated_at = NOW() WHERE id = ?";
-        return executeUpdate(sql, id) > 0;
-    }
-    
-    /**
-     * Calcula média de avaliações de um livro
-     */
-    public double calcularMediaPorLivro(int livroId) throws SQLException {
-        String sql = "SELECT AVG(rating) FROM avaliacoes WHERE livro_id = ? AND aprovado = true";
-        
-        List<Double> result = executeQuery(sql, rs -> rs.getDouble(1), livroId);
-        return result.isEmpty() ? 0.0 : result.get(0);
-    }
-    
-    /**
-     * Mapeia ResultSet para Avaliacao
+     * Mapeia um registro do ResultSet para um objeto Avaliacao
      */
     private Avaliacao mapRowToAvaliacao(ResultSet rs) throws SQLException {
         Avaliacao avaliacao = new Avaliacao();
@@ -203,29 +127,29 @@ public class AvaliacaoDAO extends BaseDAO<Avaliacao> {
     }
     
     /**
-     * Mapeia ResultSet para Avaliacao com dados do usuário
+     * Mapeia um registro do ResultSet para Avaliacao, incluindo dados básicos do Livro
      */
-    private Avaliacao mapRowToAvaliacaoComUser(ResultSet rs) throws SQLException {
+    private Avaliacao mapRowToAvaliacaoComLivro(ResultSet rs) throws SQLException {
         Avaliacao avaliacao = mapRowToAvaliacao(rs);
         
-        // Se precisar adicionar dados do usuário, fazer aqui
-        // User user = new User();
-        // user.setName(rs.getString("user_name"));
-        // avaliacao.setUser(user);
+        Livro livro = new Livro();
+        livro.setId(avaliacao.getLivroId());
+        livro.setTitulo(rs.getString("livro_titulo"));
+        livro.setImagem(rs.getString("livro_imagem"));
+        avaliacao.setLivro(livro);
         
         return avaliacao;
     }
     
-    /**
-     * Mapeia ResultSet para Avaliacao com dados completos
-     */
-    private Avaliacao mapRowToAvaliacaoCompleta(ResultSet rs) throws SQLException {
-        Avaliacao avaliacao = mapRowToAvaliacao(rs);
-        
-        // Adicionar dados extras se necessário
-        // String livroTitulo = rs.getString("livro_titulo");
-        // String userName = rs.getString("user_name");
-        
-        return avaliacao;
-    }
+    // Métodos abstratos da BaseDAO (implementação mínima)
+    @Override
+    public List<Avaliacao> findAll() { throw new UnsupportedOperationException(); }
+    @Override
+    public Avaliacao findById(Long id) { throw new UnsupportedOperationException(); }
+    @Override
+    public Avaliacao save(Avaliacao entity) { throw new UnsupportedOperationException(); }
+    @Override
+    public Avaliacao update(Avaliacao entity) { throw new UnsupportedOperationException(); }
+    @Override
+    public boolean delete(Long id) { throw new UnsupportedOperationException(); }
 }

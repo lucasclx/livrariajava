@@ -1,143 +1,125 @@
 package com.livraria.dao;
 
 import com.livraria.models.Order;
-import com.livraria.utils.ConnectionFactory;
+import com.livraria.models.OrderItem;
+import com.livraria.models.User;
+import com.livraria.models.Livro;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OrderDAO {
+public class OrderDAO extends BaseDAO<Order> {
 
-    public int contar() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM pedidos";
-        try (Connection conn = ConnectionFactory.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            if (rs.next()) return rs.getInt(1);
-        }
-        return 0;
+    @Override
+    protected String getTableName() {
+        return "orders";
     }
 
-    public Order buscarPorId(int id) throws SQLException {
-        String sql = "SELECT * FROM pedidos WHERE id = ?";
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) return parseOrder(rs);
-            }
+    public Order criar(Connection conn, Order order) throws SQLException {
+        String sql = "INSERT INTO orders (order_number, user_id, cart_id, cupom_id, subtotal, desconto, shipping_cost, total, payment_method, status, shipping_recipient_name, shipping_street, shipping_number, shipping_complement, shipping_neighborhood, shipping_city, shipping_state, shipping_postal_code, created_at, updated_at) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        
+        PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        stmt.setString(1, order.getOrderNumber());
+        stmt.setInt(2, order.getUserId());
+        stmt.setObject(3, order.getCartId());
+        stmt.setObject(4, order.getCupomId());
+        stmt.setBigDecimal(5, order.getSubtotal());
+        stmt.setBigDecimal(6, order.getDesconto());
+        stmt.setBigDecimal(7, order.getShippingCost());
+        stmt.setBigDecimal(8, order.getTotal());
+        stmt.setString(9, order.getPaymentMethod());
+        stmt.setString(10, order.getStatus());
+        stmt.setString(11, order.getShippingRecipientName());
+        stmt.setString(12, order.getShippingStreet());
+        stmt.setString(13, order.getShippingNumber());
+        stmt.setString(14, order.getShippingComplement());
+        stmt.setString(15, order.getShippingNeighborhood());
+        stmt.setString(16, order.getShippingCity());
+        stmt.setString(17, order.getShippingState());
+        stmt.setString(18, order.getShippingPostalCode());
+        
+        stmt.executeUpdate();
+        
+        ResultSet rs = stmt.getGeneratedKeys();
+        if (rs.next()) {
+            order.setId(rs.getInt(1));
         }
-        return null;
-    }
-
-    public List<Order> buscarUltimos(int limite) throws SQLException {
-        String sql = "SELECT * FROM pedidos ORDER BY data_criacao DESC LIMIT ?";
-        List<Order> lista = new ArrayList<>();
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, limite);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) lista.add(parseOrder(rs));
-            }
-        }
-        return lista;
-    }
-
-    public void atualizarStatus(int pedidoId, String status, String observacoes) throws SQLException {
-        String sql = "UPDATE pedidos SET status = ?, observacoes = ? WHERE id = ?";
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, status);
-            stmt.setString(2, observacoes);
-            stmt.setInt(3, pedidoId);
-            stmt.executeUpdate();
-        }
-    }
-
-    public void devolverEstoque(int pedidoId) throws SQLException {
-        // Exemplo simples. Adapte para seu sistema.
-        String sql = "UPDATE livros l " +
-                "JOIN itens_pedido i ON l.id = i.livro_id " +
-                "SET l.estoque = l.estoque + i.quantidade " +
-                "WHERE i.pedido_id = ?";
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, pedidoId);
-            stmt.executeUpdate();
-        }
-    }
-
-    // Métodos fictícios para exemplos avançados - personalize conforme seu banco:
-    public int contarComFiltros(String status, String dataInicio, String dataFim) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM pedidos WHERE 1=1";
-        List<Object> params = new ArrayList<>();
-        if (status != null && !status.isEmpty()) {
-            sql += " AND status = ?";
-            params.add(status);
-        }
-        if (dataInicio != null && !dataInicio.isEmpty()) {
-            sql += " AND data_criacao >= ?";
-            params.add(Date.valueOf(dataInicio));
-        }
-        if (dataFim != null && !dataFim.isEmpty()) {
-            sql += " AND data_criacao <= ?";
-            params.add(Date.valueOf(dataFim));
-        }
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            for (int i = 0; i < params.size(); i++) {
-                stmt.setObject(i + 1, params.get(i));
-            }
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
-            }
-        }
-        return 0;
-    }
-
-    public List<Order> buscarComFiltros(String status, String dataInicio, String dataFim, int page, int pageSize) throws SQLException {
-        String sql = "SELECT * FROM pedidos WHERE 1=1";
-        List<Object> params = new ArrayList<>();
-        if (status != null && !status.isEmpty()) {
-            sql += " AND status = ?";
-            params.add(status);
-        }
-        if (dataInicio != null && !dataInicio.isEmpty()) {
-            sql += " AND data_criacao >= ?";
-            params.add(Date.valueOf(dataInicio));
-        }
-        if (dataFim != null && !dataFim.isEmpty()) {
-            sql += " AND data_criacao <= ?";
-            params.add(Date.valueOf(dataFim));
-        }
-        sql += " ORDER BY data_criacao DESC LIMIT ? OFFSET ?";
-        params.add(pageSize);
-        params.add((page - 1) * pageSize);
-
-        List<Order> lista = new ArrayList<>();
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            for (int i = 0; i < params.size(); i++) {
-                stmt.setObject(i + 1, params.get(i));
-            }
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) lista.add(parseOrder(rs));
-            }
-        }
-        return lista;
-    }
-
-    // Exemplo de parse para montar o objeto Order (personalize para seu modelo!)
-    private Order parseOrder(ResultSet rs) throws SQLException {
-        Order order = new Order();
-        order.setId(rs.getInt("id"));
-        order.setStatus(rs.getString("status"));
-        order.setDataCriacao(rs.getTimestamp("data_criacao").toLocalDateTime());
-        order.setObservacoes(rs.getString("observacoes"));
-        // Preencha os campos conforme sua tabela
+        rs.close();
+        stmt.close();
+        
         return order;
     }
 
-    // Outros métodos conforme necessidade...
+    public OrderItem criarItem(Connection conn, OrderItem item) throws SQLException {
+        String sql = "INSERT INTO order_items (order_id, livro_id, quantity, unit_price, total_price, created_at) VALUES (?, ?, ?, ?, ?, NOW())";
+        
+        PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        stmt.setInt(1, item.getOrderId());
+        stmt.setInt(2, item.getLivroId());
+        stmt.setInt(3, item.getQuantity());
+        stmt.setBigDecimal(4, item.getUnitPrice());
+        stmt.setBigDecimal(5, item.getUnitPrice().multiply(new BigDecimal(item.getQuantity())));
+
+        stmt.executeUpdate();
+        
+        ResultSet rs = stmt.getGeneratedKeys();
+        if (rs.next()) {
+            item.setId(rs.getInt(1));
+        }
+        rs.close();
+        stmt.close();
+
+        return item;
+    }
+
+    public int contarPorUsuario(int userId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM orders WHERE user_id = ?";
+        return executeCountQuery(sql, userId);
+    }
+    
+    public double calcularTotalGastoPorUsuario(int userId) throws SQLException {
+        String sql = "SELECT SUM(total) FROM orders WHERE user_id = ? AND status NOT IN ('payment_failed', 'cancelled')";
+        List<Double> result = executeQuery(sql, rs -> rs.getDouble(1), userId);
+        return result.isEmpty() || result.get(0) == null ? 0.0 : result.get(0);
+    }
+
+    public List<Order> buscarPorUsuario(int userId, int page, int pageSize) throws SQLException {
+        String sql = "SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC" + buildLimitClause(page, pageSize);
+        return executeQuery(sql, this::mapRowToOrder, userId);
+    }
+    
+    public List<Order> buscarUltimosPorUsuario(int userId, int limit) throws SQLException {
+        String sql = "SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT ?";
+        return executeQuery(sql, this::mapRowToOrder, userId, limit);
+    }
+
+    private Order mapRowToOrder(ResultSet rs) throws SQLException {
+        Order order = new Order();
+        order.setId(rs.getInt("id"));
+        order.setOrderNumber(rs.getString("order_number"));
+        order.setUserId(rs.getInt("user_id"));
+        order.setTotal(rs.getBigDecimal("total"));
+        order.setStatus(rs.getString("status"));
+        order.setCreatedAt(toLocalDateTime(rs.getTimestamp("created_at")));
+        order.setUpdatedAt(toLocalDateTime(rs.getTimestamp("updated_at")));
+        // Mapear outros campos se necessário
+        return order;
+    }
+
+    // Outros métodos da classe abstrata
+    @Override
+    public List<Order> findAll() { throw new UnsupportedOperationException(); }
+    @Override
+    public Order findById(Long id) { throw new UnsupportedOperationException(); }
+    @Override
+    public Order save(Order entity) { throw new UnsupportedOperationException(); }
+    @Override
+    public Order update(Order entity) { throw new UnsupportedOperationException(); }
+    @Override
+    public boolean delete(Long id) { throw new UnsupportedOperationException(); }
+    @Override
+    protected Order mapResultSetToEntity(ResultSet rs) throws SQLException { return mapRowToOrder(rs); }
 }
