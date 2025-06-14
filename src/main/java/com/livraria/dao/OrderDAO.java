@@ -96,6 +96,40 @@ public class OrderDAO extends BaseDAO<Order> {
         return executeQuery(sql, this::mapRowToOrder, userId, limit);
     }
 
+    /**
+     * Conta o total de pedidos no sistema.
+     * @return O número total de pedidos.
+     * @throws SQLException
+     */
+    public int contar() throws SQLException {
+        return executeCountQuery("SELECT COUNT(*) FROM orders");
+    }
+
+    /**
+     * Calcula o faturamento do mês atual.
+     * @return O valor total do faturamento.
+     * @throws SQLException
+     */
+    public BigDecimal calcularFaturamentoMesAtual() throws SQLException {
+        String sql = "SELECT SUM(total) FROM orders WHERE created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH) AND status NOT IN ('cancelled', 'payment_failed')";
+        List<BigDecimal> result = executeQuery(sql, rs -> rs.getBigDecimal(1));
+        return result.isEmpty() || result.get(0) == null ? BigDecimal.ZERO : result.get(0);
+    }
+
+    /**
+     * Busca os últimos pedidos feitos na loja.
+     * @param limit O número de pedidos a retornar.
+     * @return Uma lista de pedidos.
+     * @throws SQLException
+     */
+    public List<Order> buscarUltimos(int limit) throws SQLException {
+        String sql = "SELECT o.*, u.name as user_name " +
+                     "FROM orders o " +
+                     "JOIN users u ON o.user_id = u.id " +
+                     "ORDER BY o.created_at DESC LIMIT ?";
+        return executeQuery(sql, this::mapRowToOrderWithUser, limit);
+    }
+
     private Order mapRowToOrder(ResultSet rs) throws SQLException {
         Order order = new Order();
         order.setId(rs.getInt("id"));
@@ -106,6 +140,17 @@ public class OrderDAO extends BaseDAO<Order> {
         order.setCreatedAt(toLocalDateTime(rs.getTimestamp("created_at")));
         order.setUpdatedAt(toLocalDateTime(rs.getTimestamp("updated_at")));
         // Mapear outros campos se necessário
+        return order;
+    }
+
+    private Order mapRowToOrderWithUser(ResultSet rs) throws SQLException {
+        Order order = mapRowToOrder(rs);
+        User user = new User();
+        user.setId(order.getUserId());
+        if (hasColumn(rs, "user_name")) {
+            user.setName(rs.getString("user_name"));
+        }
+        order.setUser(user);
         return order;
     }
 

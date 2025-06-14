@@ -48,22 +48,18 @@ public abstract class BaseController extends HttpServlet {
     /**
      * Redireciona com mensagem de sucesso
      */
-    protected void redirectWithSuccess(HttpServletResponse response, String url, String message) throws IOException {
-        HttpSession session = (HttpSession) request.getAttribute("session");
-        if (session != null) {
-             session.setAttribute("success", message);
-        }
+    protected void redirectWithSuccess(HttpServletResponse response, HttpServletRequest request, String url, String message) throws IOException {
+        HttpSession session = request.getSession();
+        session.setAttribute("success", message);
         response.sendRedirect(url);
     }
     
     /**
      * Redireciona com mensagem de erro
      */
-    protected void redirectWithError(HttpServletResponse response, String url, String message) throws IOException {
-        HttpSession session = (HttpSession) request.getAttribute("session");
-        if (session != null) {
-            session.setAttribute("error", message);
-        }
+    protected void redirectWithError(HttpServletResponse response, HttpServletRequest request, String url, String message) throws IOException {
+        HttpSession session = request.getSession();
+        session.setAttribute("error", message);
         response.sendRedirect(url);
     }
     
@@ -112,7 +108,7 @@ public abstract class BaseController extends HttpServlet {
             if (request.getQueryString() != null) {
                 redirectUrl += "?" + request.getQueryString();
             }
-            redirectWithError(response, request.getContextPath() + "/login", "Você precisa fazer login para acessar esta página.");
+            redirectWithError(response, request, request.getContextPath() + "/login", "Você precisa fazer login para acessar esta página.");
         }
     }
     
@@ -138,6 +134,32 @@ public abstract class BaseController extends HttpServlet {
         }
         try {
             return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Obtém parâmetro booleano da requisição
+     */
+    protected boolean getBooleanParameter(HttpServletRequest request, String paramName, boolean defaultValue) {
+        String value = request.getParameter(paramName);
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+        return "true".equalsIgnoreCase(value) || "on".equalsIgnoreCase(value) || "1".equals(value);
+    }
+
+    /**
+     * Obtém parâmetro double da requisição
+     */
+    protected Double getDoubleParameter(HttpServletRequest request, String paramName, Double defaultValue) {
+        String value = request.getParameter(paramName);
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+        try {
+            return Double.parseDouble(value.trim().replace(',', '.'));
         } catch (NumberFormatException e) {
             return defaultValue;
         }

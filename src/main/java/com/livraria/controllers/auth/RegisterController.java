@@ -136,7 +136,7 @@ public class RegisterController extends BaseController {
             newUser.setCpf(cpf != null && !cpf.trim().isEmpty() ? cpf.trim() : null);
             newUser.setDataNascimento(dataNascimento);
             newUser.setGenero(genero);
-            newUser.setIsAdmin(false);  // Corrigido: setIsAdmin ao invés de setAdmin
+            newUser.setIsAdmin(false);
             newUser.setAtivo(true);
             
             // Salvar no banco
@@ -148,7 +148,7 @@ public class RegisterController extends BaseController {
             session.setAttribute("user_name", savedUser.getName());
             
             // Redirecionar para página de boas-vindas
-            redirectWithSuccess(response, request.getContextPath() + "/perfil", 
+            redirectWithSuccess(response, request, request.getContextPath() + "/perfil", 
                 "Conta criada com sucesso! Bem-vindo à Livraria Mil Páginas!");
             
         } catch (Exception e) {

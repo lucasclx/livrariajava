@@ -42,7 +42,7 @@ public class ApiController extends BaseController {
 
         try {
             if (path.startsWith("/livros")) {
-                List<Livro> livros = livroDAO.findAtivos();
+                List<Livro> livros = livroDAO.findAtivos(); // CORRIGIDO: Usando o método correto
                 sendJsonSuccess(response, livros);
             } else if (path.startsWith("/categorias")) {
                 List<Categoria> categorias = categoriaDAO.listarAtivas();
@@ -52,7 +52,7 @@ public class ApiController extends BaseController {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            sendJsonError(response, "Erro ao processar requisição");
+            sendJsonError(response, "Erro ao processar requisição", 500); // CORRIGIDO: Adicionado o status code
         }
     }
 }

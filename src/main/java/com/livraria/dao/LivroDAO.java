@@ -1,229 +1,141 @@
 package com.livraria.dao;
 
-import com.livraria.models.Livro;
-import com.livraria.models.Categoria;
-import java.sql.*;
-import java.util.List;
+import com.livraria.models.User;
+import com.livraria.utils.PasswordUtil;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
- * DAO para operações com Livros
+ * DAO para operações com Usuários.
+ * Corrigido para conter o código correto da classe UserDAO.
  */
-public class LivroDAO extends BaseDAO<Livro> {
-    
+public class UserDAO extends BaseDAO<User> {
+
     @Override
     protected String getTableName() {
-        return "livros";
+        return "users";
     }
 
     @Override
-    protected Livro mapResultSetToEntity(ResultSet rs) throws SQLException {
-        return mapRowToLivro(rs);
-    }
-    
-    /**
-     * Busca livro por ID
-     */
-    public Livro buscarPorId(int id) throws SQLException {
-        String sql = "SELECT * FROM livros WHERE id = ?";
-        return executeSingleQuery(sql, this::mapRowToLivro, id);
-    }
-    
-    /**
-     * Busca livro por ID com categoria
-     */
-    public Livro buscarPorIdComCategoria(int id) throws SQLException {
-        String sql = "SELECT l.*, c.nome as categoria_nome " +
-                    "FROM livros l " +
-                    "LEFT JOIN categorias c ON l.categoria_id = c.id " +
-                    "WHERE l.id = ?";
-        return executeSingleQuery(sql, this::mapRowToLivroComCategoria, id);
-    }
-    
-    /**
-     * Lista livros ativos com paginação
-     */
-    public List<Livro> listarAtivos(int page, int pageSize) throws SQLException {
-        validatePagination(page, pageSize);
-        String sql = "SELECT * FROM livros WHERE ativo = true ORDER BY titulo" + 
-                    buildLimitClause(page, pageSize);
-        return executeQuery(sql, this::mapRowToLivro);
-    }
-    
-    /**
-     * Conta o total de livros ativos
-     */
-    public int contarAtivos() throws SQLException {
-        return executeCountQuery("SELECT COUNT(*) FROM livros WHERE ativo = true");
-    }
-    
-    /**
-     * Busca livros em destaque
-     */
-    public List<Livro> buscarDestaque(int limit) throws SQLException {
-        String sql = "SELECT * FROM livros WHERE ativo = true AND destaque = true " +
-                    "ORDER BY created_at DESC LIMIT ?";
-        return executeQuery(sql, this::mapRowToLivro, limit);
-    }
-    
-    /**
-     * Busca livros mais vendidos
-     */
-    public List<Livro> buscarMaisVendidos(int limit) throws SQLException {
-        String sql = "SELECT * FROM livros WHERE ativo = true " +
-                    "ORDER BY vendas_total DESC, titulo LIMIT ?";
-        return executeQuery(sql, this::mapRowToLivro, limit);
-    }
-
-    /**
-     * Busca livros por categoria com paginação
-     */
-    public List<Livro> buscarPorCategoria(int categoriaId, int page, int pageSize) throws SQLException {
-        validatePagination(page, pageSize);
-        String sql = "SELECT * FROM livros WHERE ativo = true AND categoria_id = ? " +
-                    "ORDER BY titulo" + buildLimitClause(page, pageSize);
-        return executeQuery(sql, this::mapRowToLivro, categoriaId);
-    }
-    
-    /**
-     * Conta livros por categoria
-     */
-    public int contarPorCategoria(int categoriaId) throws SQLException {
-        return executeCountQuery("SELECT COUNT(*) FROM livros WHERE ativo = true AND categoria_id = ?", 
-                                categoriaId);
-    }
-    
-    /**
-     * Busca livros relacionados (mesma categoria, exceto o próprio livro)
-     */
-    public List<Livro> buscarRelacionados(int categoriaId, int excludeLivroId, int limit) throws SQLException {
-        String sql = "SELECT * FROM livros WHERE ativo = true " +
-                    "AND categoria_id = ? AND id != ? " +
-                    "ORDER BY RAND() LIMIT ?";
-        return executeQuery(sql, this::mapRowToLivro, categoriaId, excludeLivroId, limit);
-    }
-    
-    /**
-     * Busca livros por termo de pesquisa com paginação
-     */
-    public List<Livro> buscarPorTermo(String termo, int page, int pageSize) throws SQLException {
-        validatePagination(page, pageSize);
-        String searchTerm = "%" + escapeLike(termo) + "%";
-        String sql = "SELECT * FROM livros WHERE ativo = true " +
-                    "AND (titulo LIKE ? OR autor LIKE ? OR isbn LIKE ?) " +
-                    "ORDER BY titulo" + buildLimitClause(page, pageSize);
-        return executeQuery(sql, this::mapRowToLivro, searchTerm, searchTerm, searchTerm);
-    }
-    
-    /**
-     * Conta livros por termo de pesquisa
-     */
-    public int contarPorTermo(String termo) throws SQLException {
-        String searchTerm = "%" + escapeLike(termo) + "%";
-        return executeCountQuery("SELECT COUNT(*) FROM livros WHERE ativo = true " +
-                                "AND (titulo LIKE ? OR autor LIKE ? OR isbn LIKE ?)", 
-                                searchTerm, searchTerm, searchTerm);
-    }
-
-    /**
-     * Busca favoritos de um usuário com paginação
-     */
-    public List<Livro> buscarFavoritos(int userId, int page, int pageSize) throws SQLException {
-        validatePagination(page, pageSize);
-        String sql = "SELECT l.* FROM livros l " +
-                    "JOIN favoritos f ON l.id = f.livro_id " +
-                    "WHERE f.user_id = ? AND l.ativo = true " +
-                    "ORDER BY f.created_at DESC" + buildLimitClause(page, pageSize);
-        return executeQuery(sql, this::mapRowToLivro, userId);
-    }
-    
-    /**
-     * Conta total de favoritos de um usuário
-     */
-    public int contarFavoritos(int userId) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM favoritos f " +
-                    "JOIN livros l ON f.livro_id = l.id " +
-                    "WHERE f.user_id = ? AND l.ativo = true";
-        return executeCountQuery(sql, userId);
-    }
-
-    /**
-     * Baixa o estoque de um livro (usado em transações)
-     */
-    public boolean baixarEstoque(Connection conn, int livroId, int quantidade) throws SQLException {
-        String sql = "UPDATE livros SET estoque = estoque - ?, vendas_total = vendas_total + ? WHERE id = ? AND estoque >= ?";
-        
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, quantidade);
-            stmt.setInt(2, quantidade);
-            stmt.setInt(3, livroId);
-            stmt.setInt(4, quantidade);
-            
-            int affectedRows = stmt.executeUpdate();
-            
-            if (affectedRows == 0) {
-                throw new SQLException("Estoque insuficiente ou livro não encontrado para baixar estoque. Livro ID: " + livroId);
-            }
-            return true;
+    protected User mapResultSetToEntity(ResultSet rs) throws SQLException {
+        User user = new User();
+        user.setId(rs.getInt("id"));
+        user.setName(rs.getString("name"));
+        user.setEmail(rs.getString("email"));
+        user.setPassword(rs.getString("password"));
+        user.setTelefone(rs.getString("telefone"));
+        user.setCpf(rs.getString("cpf"));
+        if (rs.getDate("data_nascimento") != null) {
+            user.setDataNascimento(rs.getDate("data_nascimento").toLocalDate());
         }
+        user.setGenero(rs.getString("genero"));
+        user.setIsAdmin(rs.getBoolean("is_admin"));
+        user.setAtivo(rs.getBoolean("ativo"));
+        user.setEmailVerifiedAt(toLocalDateTime(rs.getTimestamp("email_verified_at")));
+        user.setLastLoginAt(toLocalDateTime(rs.getTimestamp("last_login_at")));
+        user.setCreatedAt(toLocalDateTime(rs.getTimestamp("created_at")));
+        user.setUpdatedAt(toLocalDateTime(rs.getTimestamp("updated_at")));
+        return user;
     }
 
-    /**
-     * Mapeia um registro do ResultSet para um objeto Livro
-     */
-    private Livro mapRowToLivro(ResultSet rs) throws SQLException {
-        Livro livro = new Livro();
-        livro.setId(rs.getInt("id"));
-        livro.setTitulo(rs.getString("titulo"));
-        livro.setAutor(rs.getString("autor"));
-        livro.setIsbn(rs.getString("isbn"));
-        livro.setEditora(rs.getString("editora"));
-        livro.setAnoPublicacao((Integer) rs.getObject("ano_publicacao"));
-        livro.setPreco(rs.getBigDecimal("preco"));
-        livro.setPrecoPromocional(rs.getBigDecimal("preco_promocional"));
-        livro.setPaginas((Integer) rs.getObject("paginas"));
-        livro.setSinopse(rs.getString("sinopse"));
-        livro.setCategoriaId((Integer) rs.getObject("categoria_id"));
-        livro.setEstoque(rs.getInt("estoque"));
-        livro.setImagem(rs.getString("imagem"));
-        livro.setAtivo(rs.getBoolean("ativo"));
-        livro.setDestaque(rs.getBoolean("destaque"));
-        livro.setVendasTotal(rs.getInt("vendas_total"));
-        livro.setPeso(rs.getDouble("peso"));
-        livro.setCreatedAt(toLocalDateTime(rs.getTimestamp("created_at")));
-        livro.setUpdatedAt(toLocalDateTime(rs.getTimestamp("updated_at")));
+    public User buscarPorEmail(String email) throws SQLException {
+        String sql = "SELECT * FROM users WHERE email = ?";
+        return executeSingleQuery(sql, this::mapResultSetToEntity, email);
+    }
+
+    public boolean emailJaExiste(String email) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
+        return executeCountQuery(sql, email) > 0;
+    }
+
+    public boolean emailJaExisteParaOutroUsuario(String email, int userId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM users WHERE email = ? AND id != ?";
+        return executeCountQuery(sql, email, userId) > 0;
+    }
+
+    public User criar(User user) throws SQLException {
+        String sql = "INSERT INTO users (name, email, password, telefone, cpf, data_nascimento, genero, is_admin, ativo, created_at, updated_at) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        int id = executeInsert(sql,
+            user.getName(), user.getEmail(), user.getPassword(), user.getTelefone(),
+            user.getCpf(), user.getDataNascimento(), user.getGenero(),
+            user.getIsAdmin(), user.getAtivo());
+        user.setId(id);
+        return user;
+    }
+
+    public boolean atualizar(User user) throws SQLException {
+        String sql = "UPDATE users SET name = ?, email = ?, telefone = ?, data_nascimento = ?, genero = ?, ativo = ?, updated_at = NOW() WHERE id = ?";
+        return executeUpdate(sql, user.getName(), user.getEmail(), user.getTelefone(),
+                        user.getDataNascimento(), user.getGenero(), user.getAtivo(), user.getId()) > 0;
+    }
+
+    public boolean atualizarUltimoLogin(int userId) throws SQLException {
+        String sql = "UPDATE users SET last_login_at = NOW() WHERE id = ?";
+        return executeUpdate(sql, userId) > 0;
+    }
+
+    public boolean atualizarSenha(int userId, String newPasswordHash) throws SQLException {
+        String sql = "UPDATE users SET password = ? WHERE id = ?";
+        return executeUpdate(sql, newPasswordHash, userId) > 0;
+    }
+
+    public int contar() throws SQLException {
+        return executeCountQuery("SELECT COUNT(*) FROM " + getTableName());
+    }
+
+    public List<User> buscarComFiltros(String busca, String status, int page, int pageSize) throws SQLException {
+        validatePagination(page, pageSize);
         
-        return livro;
+        StringBuilder sql = new StringBuilder("SELECT * FROM users WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+        
+        if (busca != null && !busca.trim().isEmpty()) {
+            sql.append("AND (name LIKE ? OR email LIKE ? OR cpf LIKE ?) ");
+            String searchTerm = "%" + escapeLike(busca) + "%";
+            params.add(searchTerm);
+            params.add(searchTerm);
+            params.add(searchTerm);
+        }
+        
+        if (status != null && !status.isEmpty()) {
+            sql.append("AND ativo = ? ");
+            params.add("ativo".equals(status));
+        }
+        
+        sql.append("ORDER BY name ASC ").append(buildLimitClause(page, pageSize));
+        
+        return executeQuery(sql.toString(), this::mapResultSetToEntity, params.toArray());
+    }
+
+    public int contarComFiltros(String busca, String status) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+        
+        if (busca != null && !busca.trim().isEmpty()) {
+            sql.append("AND (name LIKE ? OR email LIKE ? OR cpf LIKE ?) ");
+            String searchTerm = "%" + escapeLike(busca) + "%";
+            params.add(searchTerm);
+            params.add(searchTerm);
+            params.add(searchTerm);
+        }
+        
+        if (status != null && !status.isEmpty()) {
+            sql.append("AND ativo = ? ");
+            params.add("ativo".equals(status));
+        }
+        
+        return executeCountQuery(sql.toString(), params.toArray());
     }
     
-    /**
-     * Mapeia um registro do ResultSet para um objeto Livro com dados da Categoria
-     */
-    private Livro mapRowToLivroComCategoria(ResultSet rs) throws SQLException {
-        Livro livro = mapRowToLivro(rs);
-        
-        if (livro.getCategoriaId() != null) {
-            Categoria categoria = new Categoria();
-            categoria.setId(livro.getCategoriaId());
-            // O alias 'categoria_nome' deve estar presente no SELECT
-            if (hasColumn(rs, "categoria_nome")) {
-                categoria.setNome(rs.getString("categoria_nome"));
-            }
-            livro.setCategoria(categoria);
-        }
-        return livro;
-    }
-
-    // Métodos abstratos da BaseDAO (implementação mínima)
-    @Override
-    public List<Livro> findAll() { throw new UnsupportedOperationException(); }
-    @Override
-    public Livro findById(Long id) { throw new UnsupportedOperationException(); }
-    @Override
-    public Livro save(Livro entity) { throw new UnsupportedOperationException(); }
-    @Override
-    public Livro update(Livro entity) { throw new UnsupportedOperationException(); }
-    @Override
-    public boolean delete(Long id) { throw new UnsupportedOperationException(); }
+    // Métodos não utilizados da BaseDAO (implementação mínima)
+    @Override public List<User> findAll() { throw new UnsupportedOperationException(); }
+    @Override public User findById(Long id) { throw new UnsupportedOperationException(); }
+    @Override public User save(User entity) { throw new UnsupportedOperationException(); }
+    @Override public User update(User entity) { throw new UnsupportedOperationException(); }
+    @Override public boolean delete(Long id) { throw new UnsupportedOperationException(); }
 }

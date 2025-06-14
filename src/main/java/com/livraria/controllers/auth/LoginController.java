@@ -49,7 +49,7 @@ public class LoginController extends BaseController {
             String email = getRequiredParameter(request, "email");
             String password = getRequiredParameter(request, "password");
             String redirectUrl = request.getParameter("redirect");
-            boolean remember = "true".equals(request.getParameter("remember"));
+            boolean remember = getBooleanParameter(request, "remember", false);
             
             // Validações básicas
             if (!ValidationUtil.isValidEmail(email)) {
@@ -125,7 +125,7 @@ public class LoginController extends BaseController {
             }
             
             // Redirecionar com mensagem de sucesso
-            redirectWithSuccess(response, targetUrl, "Login realizado com sucesso! Bem-vindo, " + user.getName());
+            redirectWithSuccess(response, request, targetUrl, "Login realizado com sucesso! Bem-vindo, " + user.getName());
             
         } catch (Exception e) {
             // Log do erro
