@@ -2,8 +2,6 @@ package com.livraria.controllers;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -27,17 +25,14 @@ public class PerfilController extends BaseController {
     private UserDAO userDAO;
     private OrderDAO orderDAO;
     private LivroDAO livroDAO;
-    private AvaliacaoDAO avaliacaoDAO;
-    
-    // Formatter para datas
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private AvaliacaoDAO avaliacaoDAO; // ADICIONADO
     
     @Override
     public void init() throws ServletException {
         userDAO = new UserDAO();
         orderDAO = new OrderDAO();
         livroDAO = new LivroDAO();
-        avaliacaoDAO = new AvaliacaoDAO();
+        avaliacaoDAO = new AvaliacaoDAO(); // INICIALIZADO
     }
     
     @Override
@@ -58,13 +53,12 @@ public class PerfilController extends BaseController {
             } else if (pathInfo.equals("/favoritos")) {
                 mostrarFavoritos(request, response);
             } else if (pathInfo.equals("/avaliacoes")) {
-                mostrarAvaliacoes(request, response);
+                mostrarAvaliacoes(request, response); // AGORA FUNCIONA
             } else {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new ServletException("Erro no PerfilController", e);
+             throw new ServletException("Erro no PerfilController", e);
         }
     }
     
@@ -117,15 +111,7 @@ public class PerfilController extends BaseController {
             throws ServletException, IOException {
         
         User user = getAuthenticatedUser(request);
-        
-        // Preparar data formatada para o formulário
-        String dataFormatada = "";
-        if (user.getDataNascimento() != null) {
-            dataFormatada = user.getDataNascimento().format(DATE_FORMATTER);
-        }
-        
         request.setAttribute("user", user);
-        request.setAttribute("dataFormatada", dataFormatada);
         request.getRequestDispatcher("/WEB-INF/view/perfil/editar.jsp").forward(request, response);
     }
     
@@ -143,70 +129,59 @@ public class PerfilController extends BaseController {
             
             // Validações
             if (name.length() < 2 || name.length() > 255) {
-                redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
+                redirectWithError(response, request.getContextPath() + "/perfil/editar", 
                     "Nome deve ter entre 2 e 255 caracteres");
                 return;
             }
             
             if (!ValidationUtil.isValidEmail(email)) {
-                redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
+                redirectWithError(response, request.getContextPath() + "/perfil/editar", 
                     "Email inválido");
                 return;
             }
             
             if (userDAO.emailJaExisteParaOutroUsuario(email, user.getId())) {
-                redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
+                redirectWithError(response, request.getContextPath() + "/perfil/editar", 
                     "Email já está em uso por outro usuário");
                 return;
             }
             
             if (telefone != null && !telefone.trim().isEmpty() && !ValidationUtil.isValidPhone(telefone)) {
-                redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
+                redirectWithError(response, request.getContextPath() + "/perfil/editar", 
                         "Telefone inválido");
                 return;
             }
             
-            // Processar data de nascimento
             LocalDate dataNascimento = null;
             if (dataNascimentoStr != null && !dataNascimentoStr.trim().isEmpty()) {
                 try {
-                    dataNascimento = LocalDate.parse(dataNascimentoStr, DATE_FORMATTER);
+                    dataNascimento = LocalDate.parse(dataNascimentoStr);
                     if (dataNascimento.isAfter(LocalDate.now())) {
-                        redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
-                            "Data de nascimento não pode ser no futuro");
-                        return;
+                        throw new Exception();
                     }
-                    if (dataNascimento.isBefore(LocalDate.now().minusYears(120))) {
-                        redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
-                            "Data de nascimento inválida");
-                        return;
-                    }
-                } catch (DateTimeParseException e) {
-                    redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
-                        "Formato de data inválido. Use o formato DD/MM/AAAA");
+                } catch (Exception e) {
+                    redirectWithError(response, request.getContextPath() + "/perfil/editar", 
+                        "Data de nascimento inválida");
                     return;
                 }
             }
             
-            // Atualizar dados do usuário
             user.setName(name);
             user.setEmail(email);
-            user.setTelefone(telefone != null && !telefone.trim().isEmpty() ? telefone.trim() : null);
+            user.setTelefone(telefone);
             user.setDataNascimento(dataNascimento);
             user.setGenero(genero);
             
             userDAO.atualizar(user);
             
-            // Atualizar sessão
             request.getSession().setAttribute("user", user);
             request.getSession().setAttribute("user_name", user.getName());
             
-            redirectWithSuccess(response, request, request.getContextPath() + "/perfil", 
+            redirectWithSuccess(response, request.getContextPath() + "/perfil", 
                 "Perfil atualizado com sucesso!");
             
         } catch (Exception e) {
-            e.printStackTrace();
-            redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
+            redirectWithError(response, request.getContextPath() + "/perfil/editar", 
                 "Erro ao atualizar perfil: " + e.getMessage());
         }
     }
@@ -222,31 +197,30 @@ public class PerfilController extends BaseController {
             String confirmacao = getRequiredParameter(request, "nova_senha_confirmation");
             
             if (!PasswordUtil.verify(senhaAtual, user.getPassword())) {
-                redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
+                redirectWithError(response, request.getContextPath() + "/perfil/editar", 
                     "Senha atual incorreta");
                 return;
             }
             
             if (novaSenha.length() < 8) {
-                redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
+                redirectWithError(response, request.getContextPath() + "/perfil/editar", 
                     "Nova senha deve ter pelo menos 8 caracteres");
                 return;
             }
             
             if (!novaSenha.equals(confirmacao)) {
-                redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
+                redirectWithError(response, request.getContextPath() + "/perfil/editar", 
                     "Confirmação da nova senha não confere");
                 return;
             }
             
             userDAO.atualizarSenha(user.getId(), PasswordUtil.hash(novaSenha));
             
-            redirectWithSuccess(response, request, request.getContextPath() + "/perfil", 
+            redirectWithSuccess(response, request.getContextPath() + "/perfil", 
                 "Senha alterada com sucesso!");
             
         } catch (Exception e) {
-            e.printStackTrace();
-            redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
+            redirectWithError(response, request.getContextPath() + "/perfil/editar", 
                 "Erro ao alterar senha: " + e.getMessage());
         }
     }

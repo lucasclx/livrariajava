@@ -1,494 +1,526 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
-
-<c:set var="pageTitle" value="Bem-vindo à Livraria Mil Páginas" />
-
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-100">
+<html lang="pt-BR">
 <head>
-    <%-- Inclui o cabeçalho com CSS e metatags --%>
-    <jsp:include page="WEB-INF/view/common/head.jsp" />
-</head>
-<body class="d-flex flex-column h-100">
-
-    <%-- Inclui o menu de navegação --%>
-    <jsp:include page="WEB-INF/view/common/header.jsp" />
-
-    <!-- Hero Section -->
-    <section class="hero-section text-center fade-in-down">
-        <div class="container">
-            <h1 class="display-3 mb-4" style="font-family: var(--font-serif);">
-                Onde cada página é uma nova jornada.
-            </h1>
-            <p class="lead col-lg-8 mx-auto mb-5">
-                Mergulhe em universos de fantasia, desvende mistérios ou aprenda algo novo 
-                com nossa vasta coleção de livros cuidadosamente selecionados.
-            </p>
-            <div class="d-flex flex-column flex-md-row justify-content-center gap-3">
-                <a href="${pageContext.request.contextPath}/loja/catalogo" class="btn btn-gold btn-lg hover-lift">
-                    <i class="fas fa-book-open me-2"></i>Explorar nosso Acervo
-                </a>
-                <a href="${pageContext.request.contextPath}/search" class="btn btn-outline-light btn-lg hover-lift">
-                    <i class="fas fa-search me-2"></i>Buscar Livros
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <main class="container my-5 flex-shrink-0">
-
-        <!-- Livros em Destaque -->
-        <section id="destaques" class="mb-5 fade-in-up">
-            <div class="text-center mb-5">
-                <h2 class="page-title">Livros em Destaque</h2>
-                <p class="lead text-muted">Descobrimentos literários selecionados especialmente para você</p>
-            </div>
-            
-            <c:choose>
-                <c:when test="${not empty livrosDestaque}">
-                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-                        <c:forEach var="livro" items="${livrosDestaque}" varStatus="status">
-                            <div class="col">
-                                <div class="card book-card h-100" style="animation-delay: ${status.index * 0.1}s;">
-                                    <!-- Capa do Livro -->
-                                    <div class="position-relative">
-                                        <a href="${pageContext.request.contextPath}/loja/livro/${livro.id}">
-                                            <c:choose>
-                                                <c:when test="${not empty livro.imagemUrl}">
-                                                    <img src="${pageContext.request.contextPath}${livro.imagemUrl}" 
-                                                         class="card-img-top book-cover" alt="Capa de ${livro.titulo}">
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <div class="card-img-top book-cover d-flex align-items-center justify-content-center bg-light">
-                                                        <div class="text-center text-muted">
-                                                            <i class="fas fa-book fa-3x mb-2"></i>
-                                                            <p class="small mb-0">Sem Capa</p>
-                                                        </div>
-                                                    </div>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </a>
-                                        
-                                        <!-- Badge de Destaque -->
-                                        <div class="position-absolute top-0 start-0 m-2">
-                                            <span class="badge bg-gold">
-                                                <i class="fas fa-star me-1"></i>Destaque
-                                            </span>
-                                        </div>
-                                        
-                                        <!-- Botão de Favorito -->
-                                        <div class="position-absolute top-0 end-0 m-2">
-                                            <button class="btn btn-light btn-sm rounded-circle" 
-                                                    onclick="toggleFavorite(${livro.id})" 
-                                                    data-bs-toggle="tooltip" title="Adicionar aos favoritos">
-                                                <i class="far fa-heart"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Conteúdo do Card -->
-                                    <div class="card-body d-flex flex-column text-center">
-                                        <h5 class="card-title h6 mb-2">
-                                            <a href="${pageContext.request.contextPath}/loja/livro/${livro.id}" 
-                                               class="text-decoration-none text-dark hover-gold">
-                                                ${livro.titulo}
-                                            </a>
-                                        </h5>
-                                        <p class="card-text small text-muted mb-2">
-                                            <i class="fas fa-feather-alt me-1"></i>${livro.autor}
-                                        </p>
-                                        
-                                        <!-- Categoria -->
-                                        <c:if test="${not empty livro.categoria}">
-                                            <div class="mb-2">
-                                                <span class="badge badge-category small">${livro.categoria.nome}</span>
-                                            </div>
-                                        </c:if>
-                                        
-                                        <!-- Preço e Ação -->
-                                        <div class="mt-auto pt-2">
-                                            <div class="mb-3">
-                                                <c:choose>
-                                                    <c:when test="${livro.temPromocao()}">
-                                                        <div class="d-flex flex-column align-items-center">
-                                                            <small class="text-muted text-decoration-line-through">
-                                                                ${livro.precoOriginalFormatado}
-                                                            </small>
-                                                            <span class="price text-success fw-bold">${livro.precoFormatado}</span>
-                                                            <small class="badge bg-danger">
-                                                                ${livro.percentualDesconto}% OFF
-                                                            </small>
-                                                        </div>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <span class="price">${livro.precoFormatado}</span>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </div>
-                                            
-                                            <!-- Botões de Ação -->
-                                            <div class="d-grid gap-2">
-                                                <button class="btn btn-gold btn-sm hover-lift" 
-                                                        onclick="addToCart(${livro.id})"
-                                                        ${livro.estoque <= 0 ? 'disabled' : ''}>
-                                                    <i class="fas fa-cart-plus me-2"></i>
-                                                    ${livro.estoque > 0 ? 'Adicionar' : 'Sem Estoque'}
-                                                </button>
-                                                <a href="${pageContext.request.contextPath}/loja/livro/${livro.id}" 
-                                                   class="btn btn-outline-elegant btn-sm">
-                                                    <i class="fas fa-eye me-1"></i>Ver Detalhes
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </c:forEach>
-                    </div>
-                </c:when>
-                <c:otherwise>
-                    <div class="text-center py-5">
-                        <div class="card border-0 bg-transparent">
-                            <div class="card-body">
-                                <i class="fas fa-book fa-4x text-muted mb-3"></i>
-                                <h4 class="text-muted">Nenhum livro em destaque</h4>
-                                <p class="text-muted">Em breve teremos novidades incríveis para você!</p>
-                                <a href="${pageContext.request.contextPath}/loja/catalogo" class="btn btn-primary">
-                                    Ver Catálogo Completo
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </c:otherwise>
-            </c:choose>
-        </section>
-
-        <!-- Navegação por Categorias -->
-        <section id="categorias" class="mb-5 fade-in-up">
-            <div class="text-center mb-5">
-                <h2 class="page-title">Navegar por Categorias</h2>
-                <p class="lead text-muted">Encontre exatamente o que você procura</p>
-            </div>
-            
-            <c:choose>
-                <c:when test="${not empty categorias}">
-                    <div class="row g-3">
-                        <c:forEach var="categoria" items="${categorias}" varStatus="status">
-                            <div class="col-6 col-md-4 col-lg-3">
-                                <a href="${pageContext.request.contextPath}/loja/categoria/${categoria.slug}" 
-                                   class="btn btn-outline-elegant w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3 hover-lift"
-                                   style="min-height: 100px;">
-                                    <i class="fas fa-${categoria.icon != null ? categoria.icon : 'book'} fa-2x mb-2"></i>
-                                    <span class="fw-semibold">${categoria.nome}</span>
-                                    <small class="text-muted">${categoria.totalLivros} livros</small>
-                                </a>
-                            </div>
-                        </c:forEach>
-                    </div>
-                </c:when>
-                <c:otherwise>
-                    <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <!-- Categorias padrão caso não haja no banco -->
-                        <a href="${pageContext.request.contextPath}/search?categoria=ficcao" class="btn btn-outline-elegant">Ficção</a>
-                        <a href="${pageContext.request.contextPath}/search?categoria=nao-ficcao" class="btn btn-outline-elegant">Não Ficção</a>
-                        <a href="${pageContext.request.contextPath}/search?categoria=infantil" class="btn btn-outline-elegant">Infantil</a>
-                        <a href="${pageContext.request.contextPath}/search?categoria=tecnico" class="btn btn-outline-elegant">Técnico</a>
-                        <a href="${pageContext.request.contextPath}/search?categoria=autoajuda" class="btn btn-outline-elegant">Autoajuda</a>
-                    </div>
-                </c:otherwise>
-            </c:choose>
-        </section>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Livraria Mil Páginas - Sua livraria online de confiança">
+    <meta name="keywords" content="livros, livraria, leitura, literatura, educação">
+    <meta name="author" content="Livraria Mil Páginas">
+    <title>Livraria Mil Páginas - Sua Livraria Online de Confiança</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Poppins', sans-serif;
+            margin: 0; 
+            padding: 0; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
         
-        <!-- Mais Vendidos -->
-        <section id="mais-vendidos" class="fade-in-up">
-            <div class="text-center mb-5">
-                <h2 class="page-title">Os Mais Vendidos</h2>
-                <p class="lead text-muted">Os favoritos dos nossos leitores</p>
+        .hero-container { 
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+            z-index: 1;
+        }
+        
+        .content-wrapper {
+            position: relative;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            padding: 60px 40px;
+            text-align: center;
+            max-width: 900px;
+            margin: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .logo-section {
+            margin-bottom: 40px;
+        }
+        
+        .logo-icon {
+            font-size: 4rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .main-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+        
+        .status-card {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 1px solid #a3d9a4;
+            color: #155724;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 4px 15px rgba(21, 87, 36, 0.1);
+        }
+        
+        .status-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #28a745;
+        }
+        
+        .action-buttons {
+            margin: 40px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .btn-custom {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 200px;
+            justify-content: center;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            color: white;
+        }
+        
+        .btn-outline-custom {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+        
+        .btn-outline-custom:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .info-section {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .info-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .info-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .info-item strong {
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .links-section {
+            margin-top: 30px;
+        }
+        
+        .link-item {
+            display: inline-block;
+            margin: 5px 10px;
+            padding: 8px 16px;
+            background: #e9ecef;
+            color: #495057;
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .link-item:hover {
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+        
+        .footer-info {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .shape:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+        
+        .shape:nth-child(3) {
+            width: 60px;
+            height: 60px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .content-wrapper {
+                padding: 40px 20px;
+                margin: 10px;
+            }
+            
+            .main-title {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn-custom {
+                min-width: 250px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-container">
+        <div class="floating-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+        
+        <div class="content-wrapper">
+            <div class="logo-section">
+                <i class="fas fa-book-open logo-icon pulse"></i>
+                <h1 class="main-title">Livraria Mil Páginas</h1>
+                <p class="subtitle">Sua jornada literária começa aqui</p>
             </div>
             
-            <c:choose>
-                <c:when test="${not empty livrosMaisVendidos}">
-                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-                        <c:forEach var="livro" items="${livrosMaisVendidos}" varStatus="status">
-                            <div class="col">
-                                <div class="card book-card h-100" style="animation-delay: ${status.index * 0.1}s;">
-                                    <!-- Capa do Livro -->
-                                    <div class="position-relative">
-                                        <a href="${pageContext.request.contextPath}/loja/livro/${livro.id}">
-                                            <c:choose>
-                                                <c:when test="${not empty livro.imagemUrl}">
-                                                    <img src="${pageContext.request.contextPath}${livro.imagemUrl}" 
-                                                         class="card-img-top book-cover" alt="Capa de ${livro.titulo}">
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <div class="card-img-top book-cover d-flex align-items-center justify-content-center bg-light">
-                                                        <div class="text-center text-muted">
-                                                            <i class="fas fa-book fa-3x mb-2"></i>
-                                                            <p class="small mb-0">Sem Capa</p>
-                                                        </div>
-                                                    </div>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </a>
-                                        
-                                        <!-- Badge de Mais Vendido -->
-                                        <div class="position-absolute top-0 start-0 m-2">
-                                            <span class="badge bg-success">
-                                                <i class="fas fa-fire me-1"></i>#${status.index + 1}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Conteúdo do Card -->
-                                    <div class="card-body d-flex flex-column text-center">
-                                        <h5 class="card-title h6 mb-2">
-                                            <a href="${pageContext.request.contextPath}/loja/livro/${livro.id}" 
-                                               class="text-decoration-none text-dark hover-gold">
-                                                ${livro.titulo}
-                                            </a>
-                                        </h5>
-                                        <p class="card-text small text-muted mb-2">
-                                            <i class="fas fa-feather-alt me-1"></i>${livro.autor}
-                                        </p>
-                                        
-                                        <!-- Avaliação (se disponível) -->
-                                        <c:if test="${livro.avaliacaoMedia > 0}">
-                                            <div class="mb-2">
-                                                <div class="text-warning">
-                                                    <c:forEach begin="1" end="5" var="star">
-                                                        <i class="fa${star <= livro.avaliacaoMedia ? 's' : 'r'} fa-star"></i>
-                                                    </c:forEach>
-                                                </div>
-                                                <small class="text-muted">(${livro.totalAvaliacoes} avaliações)</small>
-                                            </div>
-                                        </c:if>
-                                        
-                                        <!-- Preço e Ação -->
-                                        <div class="mt-auto pt-2">
-                                            <div class="mb-3">
-                                                <span class="price">${livro.precoFormatado}</span>
-                                            </div>
-                                            
-                                            <div class="d-grid gap-2">
-                                                <button class="btn btn-gold btn-sm hover-lift" 
-                                                        onclick="addToCart(${livro.id})"
-                                                        ${livro.estoque <= 0 ? 'disabled' : ''}>
-                                                    <i class="fas fa-cart-plus me-2"></i>
-                                                    ${livro.estoque > 0 ? 'Adicionar' : 'Sem Estoque'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </c:forEach>
+            <div class="status-card">
+                <div class="status-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3><strong>Sistema Online e Operacional!</strong></h3>
+                <p class="mb-0">
+                    Bem-vindo ao nosso sistema de livraria online. 
+                    Explore milhares de títulos e descubra seu próximo livro favorito.
+                </p>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="${pageContext.request.contextPath}/loja/" class="btn-custom btn-primary-custom">
+                    <i class="fas fa-store"></i>
+                    Explorar Loja
+                </a>
+                
+                <a href="${pageContext.request.contextPath}/loja/catalogo" class="btn-custom btn-outline-custom">
+                    <i class="fas fa-book"></i>
+                    Ver Catálogo
+                </a>
+                
+                <c:choose>
+                    <c:when test="${sessionScope.user != null}">
+                        <a href="${pageContext.request.contextPath}/perfil/" class="btn-custom btn-outline-custom">
+                            <i class="fas fa-user"></i>
+                            Meu Perfil
+                        </a>
+                        
+                        <c:if test="${sessionScope.user.admin}">
+                            <a href="${pageContext.request.contextPath}/admin/" class="btn-custom btn-outline-custom">
+                                <i class="fas fa-cog"></i>
+                                Administração
+                            </a>
+                        </c:if>
+                    </c:when>
+                    <c:otherwise>
+                        <a href="${pageContext.request.contextPath}/login" class="btn-custom btn-outline-custom">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Fazer Login
+                        </a>
+                        
+                        <a href="${pageContext.request.contextPath}/register" class="btn-custom btn-outline-custom">
+                            <i class="fas fa-user-plus"></i>
+                            Cadastrar-se
+                        </a>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+            
+            <div class="info-section">
+                <h3 class="info-title">
+                    <i class="fas fa-info-circle"></i>
+                    Informações do Sistema
+                </h3>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <strong><i class="fas fa-globe"></i> Context Path:</strong>
+                        <code>${pageContext.request.contextPath}</code>
                     </div>
-                </c:when>
-                <c:otherwise>
-                    <div class="text-center py-5">
-                        <div class="card border-0 bg-transparent">
-                            <div class="card-body">
-                                <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
-                                <h4 class="text-muted">Ainda não temos dados de vendas</h4>
-                                <p class="text-muted">Em breve você verá aqui nossos livros mais populares!</p>
-                            </div>
-                        </div>
+                    
+                    <div class="info-item">
+                        <strong><i class="fas fa-server"></i> Servidor:</strong>
+                        <%= application.getServerInfo() %>
                     </div>
-                </c:otherwise>
-            </c:choose>
-        </section>
-
-        <!-- Newsletter Section -->
-        <section class="newsletter-section my-5 fade-in-up">
-            <div class="card bg-gradient-primary text-white border-0">
-                <div class="card-body text-center py-5">
-                    <h3 class="mb-3">
-                        <i class="fas fa-envelope me-2"></i>
-                        Não perca nenhuma novidade!
-                    </h3>
-                    <p class="lead mb-4">
-                        Receba em primeira mão nossos lançamentos, promoções e dicas de leitura.
-                    </p>
-                    <form action="${pageContext.request.contextPath}/newsletter/subscribe" method="POST" class="row g-3 justify-content-center">
-                        <div class="col-md-6 col-lg-4">
-                            <div class="input-group">
-                                <input type="email" name="email" class="form-control" 
-                                       placeholder="Seu melhor e-mail" required>
-                                <button class="btn btn-gold" type="submit">
-                                    <i class="fas fa-paper-plane"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                    <small class="mt-3 d-block opacity-75">
-                        <i class="fas fa-shield-alt me-1"></i>
-                        Seus dados estão seguros. Não enviamos spam.
-                    </small>
+                    
+                    <div class="info-item">
+                        <strong><i class="fab fa-java"></i> Versão Java:</strong>
+                        <%= System.getProperty("java.version") %>
+                    </div>
+                    
+                    <div class="info-item">
+                        <strong><i class="fas fa-clock"></i> Data/Hora:</strong>
+                        <fmt:formatDate value="<%= new java.util.Date() %>" 
+                                       pattern="dd/MM/yyyy HH:mm:ss" />
+                    </div>
+                    
+                    <div class="info-item">
+                        <strong><i class="fas fa-code"></i> Versão App:</strong>
+                        <%= application.getInitParameter("app.version") != null ? 
+                            application.getInitParameter("app.version") : "1.0.0" %>
+                    </div>
+                    
+                    <div class="info-item">
+                        <strong><i class="fas fa-cogs"></i> Ambiente:</strong>
+                        <%= application.getInitParameter("app.environment") != null ? 
+                            application.getInitParameter("app.environment") : "development" %>
+                    </div>
+                </div>
+                
+                <div class="links-section">
+                    <h4><i class="fas fa-link"></i> Links da API:</h4>
+                    <a href="${pageContext.request.contextPath}/api/health" class="link-item">
+                        <i class="fas fa-heartbeat"></i> Health Check
+                    </a>
+                    <a href="${pageContext.request.contextPath}/api/livros" class="link-item">
+                        <i class="fas fa-book"></i> API Livros
+                    </a>
+                    <a href="${pageContext.request.contextPath}/api/categorias" class="link-item">
+                        <i class="fas fa-tags"></i> API Categorias
+                    </a>
+                </div>
+                
+                <div class="links-section">
+                    <h4><i class="fas fa-sitemap"></i> Navegação:</h4>
+                    <a href="${pageContext.request.contextPath}/loja/favoritos" class="link-item">
+                        <i class="fas fa-heart"></i> Favoritos
+                    </a>
+                    <a href="${pageContext.request.contextPath}/cart/" class="link-item">
+                        <i class="fas fa-shopping-cart"></i> Carrinho
+                    </a>
+                    <a href="${pageContext.request.contextPath}/loja/buscar" class="link-item">
+                        <i class="fas fa-search"></i> Buscar
+                    </a>
                 </div>
             </div>
-        </section>
-
-    </main>
-
-    <%-- Inclui o rodapé da página --%>
-    <jsp:include page="WEB-INF/view/common/footer.jsp" />
-
-    <!-- Scroll to Top Button -->
-    <button class="scroll-to-top" onclick="scrollToTop()" title="Voltar ao topo">
-        <i class="fas fa-chevron-up"></i>
-    </button>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            
+            <div class="footer-info">
+                <p>
+                    <i class="fas fa-copyright"></i> 
+                    <fmt:formatDate value="<%= new java.util.Date() %>" pattern="yyyy" /> 
+                    Livraria Mil Páginas. Desenvolvido com Java Servlets e JSP.
+                </p>
+                <p class="mb-0">
+                    <small>
+                        Sistema de gerenciamento de livraria online com funcionalidades completas
+                        para administração, vendas e controle de estoque.
+                    </small>
+                </p>
+            </div>
+        </div>
+    </div>
     
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- JavaScript customizado -->
     <script>
-        // Funcionalidade do carrinho
-        function addToCart(livroId) {
-            fetch(`${pageContext.request.contextPath}/cart/add`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `livroId=${livroId}&quantity=1`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    updateCartCount();
-                    showToast('Livro adicionado ao carrinho!', 'success');
-                } else {
-                    showToast(data.message || 'Erro ao adicionar ao carrinho', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                showToast('Erro ao adicionar ao carrinho', 'error');
+        // Animação suave para os links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
             });
-        }
-
-        // Toggle favoritos
-        function toggleFavorite(livroId) {
-            fetch(`${pageContext.request.contextPath}/favorites/toggle`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `livroId=${livroId}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const icon = event.target.closest('button').querySelector('i');
-                    if (data.isFavorite) {
-                        icon.classList.replace('far', 'fas');
-                        icon.style.color = '#dc3545';
-                        showToast('Adicionado aos favoritos!', 'success');
-                    } else {
-                        icon.classList.replace('fas', 'far');
-                        icon.style.color = '';
-                        showToast('Removido dos favoritos', 'info');
-                    }
-                } else {
-                    showToast(data.message || 'Erro ao atualizar favoritos', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                showToast('Erro ao atualizar favoritos', 'error');
+        });
+        
+        // Efeito de hover nos cards
+        document.querySelectorAll('.info-item').forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.1)';
             });
-        }
-
-        // Atualizar contagem do carrinho
-        function updateCartCount() {
-            fetch(`${pageContext.request.contextPath}/cart/count`)
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'none';
+            });
+        });
+        
+        // Verificação de saúde da aplicação
+        function checkApplicationHealth() {
+            fetch('${pageContext.request.contextPath}/api/health')
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) {
-                        document.getElementById('cart-count').textContent = data.count || 0;
-                    }
+                    console.log('Application Status:', data);
                 })
-                .catch(error => console.error('Erro ao atualizar carrinho:', error));
+                .catch(error => {
+                    console.warn('Health check failed:', error);
+                });
         }
-
-        // Toast notifications
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
-            toast.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            document.body.appendChild(toast);
+        
+        // Executar verificação após carregamento
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(checkApplicationHealth, 1000);
+        });
+        
+        // Easter egg - Konami Code
+        let konamiCode = [];
+        const konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+        
+        document.addEventListener('keydown', function(e) {
+            konamiCode.push(e.keyCode);
+            if (konamiCode.length > konamiSequence.length) {
+                konamiCode.shift();
+            }
             
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.remove();
-                }
-            }, 5000);
-        }
-
-        // Scroll to top
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
-
-        // Show/hide scroll to top button
-        window.addEventListener('scroll', function() {
-            const scrollBtn = document.querySelector('.scroll-to-top');
-            if (window.pageYOffset > 300) {
-                scrollBtn.classList.add('visible');
-            } else {
-                scrollBtn.classList.remove('visible');
+            if (JSON.stringify(konamiCode) === JSON.stringify(konamiSequence)) {
+                document.body.style.animation = 'rainbow 2s infinite';
+                setTimeout(() => {
+                    document.body.style.animation = '';
+                }, 5000);
             }
         });
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            // Atualizar contagem do carrinho
-            updateCartCount();
-            
-            // Initialize tooltips
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
-            
-            // Intersection Observer para animações
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-            
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                    }
-                });
-            }, observerOptions);
-            
-            // Observer para seções
-            document.querySelectorAll('.fade-in-up').forEach(el => {
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(30px)';
-                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                observer.observe(el);
-            });
-            
-            // Observer para cards de livros
-            document.querySelectorAll('.book-card').forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                card.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
-                observer.observe(card);
-            });
-        });
     </script>
+    
+    <style>
+        @keyframes rainbow {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+    </style>
 </body>
 </html>
