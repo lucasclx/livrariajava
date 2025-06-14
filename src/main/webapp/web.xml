@@ -20,6 +20,7 @@
         <param-value>development</param-value>
     </context-param>
 
+    <!-- FILTROS -->
     <filter>
         <filter-name>EncodingFilter</filter-name>
         <filter-class>com.livraria.filters.EncodingFilter</filter-class>
@@ -38,6 +39,7 @@
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
+    <!-- LISTENERS -->
     <listener>
         <listener-class>com.livraria.listeners.ApplicationContextListener</listener-class>
     </listener>
@@ -45,6 +47,31 @@
         <listener-class>com.livraria.listeners.SessionListener</listener-class>
     </listener>
 
+    <!-- SERVLETS E MAPEAMENTOS -->
+    
+    <!-- Index Servlet (APENAS para / e /index) -->
+    <servlet>
+        <servlet-name>IndexServlet</servlet-name>
+        <servlet-class>com.livraria.controllers.IndexServlet</servlet-class>
+        <load-on-startup>5</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>IndexServlet</servlet-name>
+        <url-pattern>/index</url-pattern>
+    </servlet-mapping>
+    
+    <!-- API Controller -->
+    <servlet>
+        <servlet-name>ApiController</servlet-name>
+        <servlet-class>com.livraria.controllers.ApiController</servlet-class>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ApiController</servlet-name>
+        <url-pattern>/api/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- Loja Controller -->
     <servlet>
         <servlet-name>LojaController</servlet-name>
         <servlet-class>com.livraria.controllers.LojaController</servlet-class>
@@ -52,12 +79,10 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>LojaController</servlet-name>
-        <url-pattern>/</url-pattern> </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>LojaController</servlet-name>
         <url-pattern>/loja/*</url-pattern>
     </servlet-mapping>
 
+    <!-- Search Controller -->
     <servlet>
         <servlet-name>SearchController</servlet-name>
         <servlet-class>com.livraria.controllers.SearchController</servlet-class>
@@ -67,6 +92,7 @@
         <url-pattern>/search</url-pattern>
     </servlet-mapping>
     
+    <!-- Autenticação -->
     <servlet>
         <servlet-name>LoginController</servlet-name>
         <servlet-class>com.livraria.controllers.auth.LoginController</servlet-class>
@@ -94,6 +120,7 @@
         <url-pattern>/logout</url-pattern>
     </servlet-mapping>
 
+    <!-- Perfil do Usuário -->
     <servlet>
         <servlet-name>PerfilController</servlet-name>
         <servlet-class>com.livraria.controllers.PerfilController</servlet-class>
@@ -103,6 +130,7 @@
         <url-pattern>/perfil/*</url-pattern>
     </servlet-mapping>
 
+    <!-- Carrinho -->
     <servlet>
         <servlet-name>CartController</servlet-name>
         <servlet-class>com.livraria.controllers.CartController</servlet-class>
@@ -112,6 +140,7 @@
         <url-pattern>/cart/*</url-pattern>
     </servlet-mapping>
 
+    <!-- Checkout -->
     <servlet>
         <servlet-name>CheckoutController</servlet-name>
         <servlet-class>com.livraria.controllers.CheckoutController</servlet-class>
@@ -121,6 +150,7 @@
         <url-pattern>/checkout</url-pattern>
     </servlet-mapping>
 
+    <!-- Favoritos -->
     <servlet>
         <servlet-name>FavoriteController</servlet-name>
         <servlet-class>com.livraria.controllers.FavoriteController</servlet-class>
@@ -130,6 +160,7 @@
         <url-pattern>/favorites/*</url-pattern>
     </servlet-mapping>
     
+    <!-- Administração -->
     <servlet>
         <servlet-name>AdminController</servlet-name>
         <servlet-class>com.livraria.controllers.AdminController</servlet-class>
@@ -139,6 +170,7 @@
         <url-pattern>/admin/*</url-pattern>
     </servlet-mapping>
 
+    <!-- Gestão de Livros (Admin) -->
     <servlet>
         <servlet-name>LivroController</servlet-name>
         <servlet-class>com.livraria.controllers.LivroController</servlet-class>
@@ -148,6 +180,7 @@
         <url-pattern>/livros/*</url-pattern>
     </servlet-mapping>
 
+    <!-- Gestão de Categorias (Admin) -->
     <servlet>
         <servlet-name>CategoriaController</servlet-name>
         <servlet-class>com.livraria.controllers.CategoriaController</servlet-class>
@@ -156,16 +189,8 @@
         <servlet-name>CategoriaController</servlet-name>
         <url-pattern>/categorias/*</url-pattern>
     </servlet-mapping>
-
-    <servlet>
-        <servlet-name>ApiController</servlet-name>
-        <servlet-class>com.livraria.controllers.ApiController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>ApiController</servlet-name>
-        <url-pattern>/api/*</url-pattern>
-    </servlet-mapping>
     
+    <!-- Upload de Arquivos -->
     <servlet>
         <servlet-name>FileUploadServlet</servlet-name>
         <servlet-class>com.livraria.controllers.FileUploadServlet</servlet-class>
@@ -175,6 +200,37 @@
         <url-pattern>/upload</url-pattern>
     </servlet-mapping>
 
+    <!-- PÁGINA INICIAL APENAS PARA A RAIZ -->
+    <servlet>
+        <servlet-name>HomeRedirectServlet</servlet-name>
+        <servlet-class>com.livraria.controllers.HomeServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>HomeRedirectServlet</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+
+    <!-- Configurações de Sessão -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+        <cookie-config>
+            <http-only>true</http-only>
+            <secure>false</secure>
+        </cookie-config>
+    </session-config>
+
+    <!-- Configurações de Erro -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/WEB-INF/view/errors/404.jsp</location>
+    </error-page>
+    
+    <error-page>
+        <error-code>500</error-code>
+        <location>/WEB-INF/view/errors/500.jsp</location>
+    </error-page>
+
+    <!-- Welcome Files -->
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>

@@ -12,9 +12,8 @@ import javax.naming.InitialContext;
 import javax.sql.DataSource;
 import com.livraria.utils.ConnectionFactory;
 
-
 /**
- * Classe base para operações de banco de dados
+ * Classe base para operações de banco de dados - Versão Completa
  */
 public abstract class BaseDAO<T> {
 
@@ -362,6 +361,39 @@ public abstract class BaseDAO<T> {
         return count;
     }
 
+    /** Executa consulta que retorna um único valor */
+    protected <R> R executeSingleValueQuery(String sql, Class<R> type, Object... parameters) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            stmt = conn.prepareStatement(sql);
+
+            for (int i = 0; i < parameters.length; i++) {
+                stmt.setObject(i + 1, parameters[i]);
+            }
+
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getObject(1, type);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(conn, stmt, rs);
+        }
+
+        return null;
+    }
+
+    /** Verifica se existe pelo menos um registro */
+    protected boolean exists(String sql, Object... parameters) {
+        return executeCountQuery(sql, parameters) > 0;
+    }
+
     /** Escapa caracteres para uso em LIKE */
     protected String escapeLike(String value) {
         if (value == null) return null;
@@ -392,6 +424,11 @@ public abstract class BaseDAO<T> {
         return ts != null ? ts.toLocalDateTime() : null;
     }
 
+    /** Converte LocalDateTime para Timestamp de forma segura */
+    protected Timestamp toTimestamp(LocalDateTime ldt) {
+        return ldt != null ? Timestamp.valueOf(ldt) : null;
+    }
+
     /** Monta SQL de seleção com ordenação e paginação */
     protected String buildSelectSql(String orderBy, String direction, int page, int size) {
         StringBuilder sb = new StringBuilder("SELECT * FROM ").append(getTableName());
@@ -416,5 +453,144 @@ public abstract class BaseDAO<T> {
     /** Executa contagem simples */
     protected int count(String sql, Object... parameters) {
         return executeCountQuery(sql, parameters);
+    }
+
+    /** Verifica se coluna existe no ResultSet - NOVO MÉTODO */
+    protected boolean hasColumn(ResultSet rs, String columnName) {
+        try {
+            rs.findColumn(columnName);
+            return true;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    /** Executa operação em lote */
+    protected int[] executeBatch(String sql, List<Object[]> parametersList) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conn = getConnection();
+            stmt = conn.prepareStatement(sql);
+
+            for (Object[] parameters : parametersList) {
+                for (int i = 0; i < parameters.length; i++) {
+                    stmt.setObject(i + 1, parameters[i]);
+                }
+                stmt.addBatch();
+            }
+
+            return stmt.executeBatch();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new int[0];
+        } finally {
+            closeResources(conn, stmt);
+        }
+    }
+
+    /** Executa transação */
+    protected <R> R executeTransaction(Function<Connection, R> transaction) throws SQLException {
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+            
+            R result = transaction.apply(conn);
+            
+            conn.commit();
+            return result;
+            
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackEx) {
+                    e.addSuppressed(rollbackEx);
+                }
+            }
+            throw e;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException closeEx) {
+                    // Log do erro de fechamento
+                }
+            }
+        }
+    }
+
+    /** Executa transação sem retorno */
+    protected void executeTransactionVoid(java.util.function.Consumer<Connection> transaction) throws SQLException {
+        executeTransaction(conn -> {
+            transaction.accept(conn);
+            return null;
+        });
+    }
+
+    /** Constrói SQL dinâmico com filtros */
+    protected String buildDynamicSQL(String baseSQL, Map<String, Object> filters, List<Object> parameters) {
+        StringBuilder sql = new StringBuilder(baseSQL);
+        
+        if (filters != null && !filters.isEmpty()) {
+            sql.append(" WHERE ");
+            boolean first = true;
+            
+            for (Map.Entry<String, Object> entry : filters.entrySet()) {
+                if (!first) {
+                    sql.append(" AND ");
+                }
+                
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                
+                if (value instanceof String && ((String) value).contains("%")) {
+                    sql.append(key).append(" LIKE ?");
+                } else if (value == null) {
+                    sql.append(key).append(" IS NULL");
+                    continue; // Não adiciona parâmetro para IS NULL
+                } else {
+                    sql.append(key).append(" = ?");
+                }
+                
+                parameters.add(value);
+                first = false;
+            }
+        }
+        
+        return sql.toString();
+    }
+
+    /** Método utilitário para logging de SQL (para debug) */
+    protected void logSQL(String sql, Object... parameters) {
+        if (isDebugEnabled()) {
+            System.out.println("SQL: " + sql);
+            if (parameters.length > 0) {
+                System.out.println("Parameters: " + java.util.Arrays.toString(parameters));
+            }
+        }
+    }
+
+    /** Verifica se debug está habilitado */
+    private boolean isDebugEnabled() {
+        // Implementar verificação de debug (pode ser via propriedade do sistema)
+        return Boolean.getBoolean("dao.debug") || "true".equals(System.getProperty("dao.debug"));
+    }
+
+    /** Método para sanitizar entrada */
+    protected String sanitizeInput(String input) {
+        if (input == null) return null;
+        return input.trim().replaceAll("[<>\"'%;()&+]", "");
+    }
+
+    /** Formata valores para log */
+    protected String formatForLog(Object value) {
+        if (value == null) return "NULL";
+        if (value instanceof String) return "'" + value + "'";
+        return value.toString();
     }
 }

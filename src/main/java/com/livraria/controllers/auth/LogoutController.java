@@ -42,6 +42,7 @@ public class LogoutController extends BaseController {
             "Logout realizado com sucesso! Até logo, " + userName + "!" :
             "Logout realizado com sucesso!";
             
-        redirectWithSuccess(response, request.getContextPath() + "/", message);
+        // CORREÇÃO: Usar ordem correta dos parâmetros
+        redirectWithSuccess(response, request, request.getContextPath() + "/", message);
     }
 }

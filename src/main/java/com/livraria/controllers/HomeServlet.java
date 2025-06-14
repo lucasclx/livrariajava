@@ -8,10 +8,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Servlet para lidar com a página inicial da aplicação
+ * Servlet para lidar com a página inicial da aplicação (/ apenas)
  */
-@WebServlet("/home")
 public class HomeServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
     
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -25,9 +25,8 @@ public class HomeServlet extends HttpServlet {
         System.out.println("PathInfo: " + request.getPathInfo());
         System.out.println("==================");
         
-        // Redirecionar para a loja principal
-        String contextPath = request.getContextPath();
-        response.sendRedirect(contextPath + "/loja/");
+        // Encaminhar para index.jsp (não redirecionar)
+        request.getRequestDispatcher("/index.jsp").forward(request, response);
     }
     
     @Override
