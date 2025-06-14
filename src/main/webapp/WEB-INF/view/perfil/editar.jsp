@@ -1,373 +1,192 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
-
+<%@ page import="com.livraria.models.User" %>
+<%@ page import="java.time.format.DateTimeFormatter" %>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Perfil - Livraria Mil Páginas</title>
-    
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <style>
-        .page-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem 0;
-        }
-        .form-card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .form-section {
-            border-bottom: 1px solid #e9ecef;
-            padding-bottom: 2rem;
-            margin-bottom: 2rem;
-        }
-        .form-section:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-        }
-        .password-strength {
-            height: 5px;
-            border-radius: 3px;
-            transition: all 0.3s;
-        }
-        .strength-weak { background: #dc3545; }
-        .strength-medium { background: #ffc107; }
-        .strength-strong { background: #198754; }
-    </style>
 </head>
 <body>
-    <!-- Header com navegação aqui -->
-    
-    <div class="page-header">
-        <div class="container">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-2">
-                    <li class="breadcrumb-item">
-                        <a href="${pageContext.request.contextPath}/perfil" class="text-white-50">
-                            <i class="fas fa-user"></i> Perfil
-                        </a>
-                    </li>
-                    <li class="breadcrumb-item active text-white" aria-current="page">Editar</li>
-                </ol>
-            </nav>
-            <h1 class="h3 mb-0">
-                <i class="fas fa-user-edit me-2"></i>Editar Perfil
-            </h1>
-            <p class="mb-0 opacity-75">Atualize suas informações pessoais e configurações</p>
-        </div>
-    </div>
+    <%
+        User user = (User) request.getAttribute("user");
+        String dataFormatada = (String) request.getAttribute("dataFormatada");
+        
+        // Mensagens de sucesso/erro
+        String successMessage = (String) session.getAttribute("success");
+        String errorMessage = (String) session.getAttribute("error");
+        session.removeAttribute("success");
+        session.removeAttribute("error");
+    %>
 
-    <div class="container my-4">
+    <div class="container mt-4">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <div class="form-card card">
-                    <div class="card-body p-4">
-                        <!-- Mensagens de Feedback -->
-                        <c:if test="${not empty error}">
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <i class="fas fa-exclamation-circle me-2"></i>${error}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        </c:if>
-                        
-                        <c:if test="${not empty success}">
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <i class="fas fa-check-circle me-2"></i>${success}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        </c:if>
-
-                        <!-- Formulário de Dados Pessoais -->
-                        <form action="${pageContext.request.contextPath}/perfil/atualizar" method="post" id="profileForm">
-                            <div class="form-section">
-                                <h5 class="mb-3">
-                                    <i class="fas fa-user me-2 text-primary"></i>Informações Pessoais
-                                </h5>
-                                
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="name" class="form-label">Nome Completo *</label>
-                                        <input type="text" class="form-control" id="name" name="name" 
-                                               value="${user.name}" required maxlength="255">
-                                        <div class="invalid-feedback">
-                                            Nome é obrigatório e deve ter entre 2 e 255 caracteres.
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="col-md-6 mb-3">
-                                        <label for="email" class="form-label">E-mail *</label>
-                                        <input type="email" class="form-control" id="email" name="email" 
-                                               value="${user.email}" required maxlength="255">
-                                        <div class="invalid-feedback">
-                                            E-mail deve ter um formato válido.
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="telefone" class="form-label">Telefone</label>
-                                        <input type="tel" class="form-control" id="telefone" name="telefone" 
-                                               value="${user.telefone}" placeholder="(11) 99999-9999">
-                                        <div class="form-text">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            Formato: (11) 99999-9999
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="col-md-6 mb-3">
-                                        <label for="cpf" class="form-label">CPF</label>
-                                        <input type="text" class="form-control" id="cpf" name="cpf" 
-                                               value="${user.cpf}" placeholder="000.000.000-00">
-                                        <div class="form-text">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            Apenas números ou formato 000.000.000-00
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="data_nascimento" class="form-label">Data de Nascimento</label>
-                                        <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" 
-                                               value="<fmt:formatDate value='${user.dataNascimento}' pattern='yyyy-MM-dd' />">
-                                    </div>
-                                    
-                                    <div class="col-md-6 mb-3">
-                                        <label for="genero" class="form-label">Gênero</label>
-                                        <select class="form-select" id="genero" name="genero">
-                                            <option value="">Prefiro não informar</option>
-                                            <option value="masculino" ${user.genero == 'masculino' ? 'selected' : ''}>Masculino</option>
-                                            <option value="feminino" ${user.genero == 'feminino' ? 'selected' : ''}>Feminino</option>
-                                            <option value="outro" ${user.genero == 'outro' ? 'selected' : ''}>Outro</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="d-flex justify-content-between">
-                                <a href="${pageContext.request.contextPath}/perfil" class="btn btn-light">
-                                    <i class="fas fa-arrow-left me-2"></i>Voltar
-                                </a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save me-2"></i>Salvar Alterações
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-user-edit me-2"></i>Editar Perfil</h2>
+                    <a href="${pageContext.request.contextPath}/perfil" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar ao Perfil
+                    </a>
                 </div>
 
-                <!-- Formulário de Alteração de Senha -->
-                <div class="form-card card mt-4">
-                    <div class="card-body p-4">
-                        <h5 class="mb-3">
-                            <i class="fas fa-lock me-2 text-warning"></i>Alterar Senha
-                        </h5>
-                        
-                        <form action="${pageContext.request.contextPath}/perfil/alterar-senha" method="post" id="passwordForm">
-                            <div class="row">
-                                <div class="col-md-12 mb-3">
-                                    <label for="senha_atual" class="form-label">Senha Atual *</label>
-                                    <div class="input-group">
-                                        <input type="password" class="form-control" id="senha_atual" name="senha_atual" required>
-                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('senha_atual')">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="nova_senha" class="form-label">Nova Senha *</label>
-                                    <div class="input-group">
-                                        <input type="password" class="form-control" id="nova_senha" name="nova_senha" required minlength="8">
-                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('nova_senha')">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                    <div class="mt-2">
-                                        <div class="password-strength" id="passwordStrength"></div>
-                                        <small class="form-text text-muted" id="passwordFeedback">
-                                            Mínimo 8 caracteres
-                                        </small>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6 mb-3">
-                                    <label for="nova_senha_confirmation" class="form-label">Confirmar Nova Senha *</label>
-                                    <div class="input-group">
-                                        <input type="password" class="form-control" id="nova_senha_confirmation" 
-                                               name="nova_senha_confirmation" required minlength="8">
-                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('nova_senha_confirmation')">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                    <div class="invalid-feedback">
-                                        As senhas não coincidem.
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <strong>Dicas para uma senha segura:</strong>
-                                <ul class="mb-0 mt-2">
-                                    <li>Use pelo menos 8 caracteres</li>
-                                    <li>Combine letras maiúsculas e minúsculas</li>
-                                    <li>Inclua números e caracteres especiais</li>
-                                    <li>Evite informações pessoais óbvias</li>
-                                </ul>
-                            </div>
-                            
-                            <div class="d-flex justify-content-end">
-                                <button type="submit" class="btn btn-warning">
-                                    <i class="fas fa-key me-2"></i>Alterar Senha
-                                </button>
-                            </div>
-                        </form>
+                <!-- Mensagens -->
+                <% if (successMessage != null) { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i><%=successMessage%>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
-                </div>
+                <% } %>
 
-                <!-- Configurações de Privacidade -->
-                <div class="form-card card mt-4">
-                    <div class="card-body p-4">
-                        <h5 class="mb-3">
-                            <i class="fas fa-shield-alt me-2 text-success"></i>Privacidade e Segurança
-                        </h5>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="d-flex justify-content-between align-items-center py-2">
-                                    <div>
-                                        <div class="fw-bold">E-mail verificado</div>
-                                        <small class="text-muted">Seu e-mail foi verificado</small>
+                <% if (errorMessage != null) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i><%=errorMessage%>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <!-- Tabs -->
+                <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="dados-tab" data-bs-toggle="tab" data-bs-target="#dados" type="button" role="tab">
+                            <i class="fas fa-user me-1"></i>Dados Pessoais
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="senha-tab" data-bs-toggle="tab" data-bs-target="#senha" type="button" role="tab">
+                            <i class="fas fa-lock me-1"></i>Alterar Senha
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="profileTabsContent">
+                    <!-- Tab Dados Pessoais -->
+                    <div class="tab-pane fade show active" id="dados" role="tabpanel">
+                        <div class="card">
+                            <div class="card-body">
+                                <form action="${pageContext.request.contextPath}/perfil/atualizar" method="post" id="formDados">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="name" class="form-label">Nome Completo *</label>
+                                                <input type="text" class="form-control" id="name" name="name" 
+                                                       value="<%=user.getName() != null ? user.getName() : ""%>" 
+                                                       required maxlength="255">
+                                                <div class="form-text">Mínimo 2 caracteres</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="email" class="form-label">E-mail *</label>
+                                                <input type="email" class="form-control" id="email" name="email" 
+                                                       value="<%=user.getEmail() != null ? user.getEmail() : ""%>" 
+                                                       required maxlength="255">
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <c:choose>
-                                            <c:when test="${user.emailVerified}">
-                                                <span class="badge bg-success">
-                                                    <i class="fas fa-check me-1"></i>Verificado
-                                                </span>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <button class="btn btn-sm btn-outline-warning">
-                                                    <i class="fas fa-envelope me-1"></i>Verificar
-                                                </button>
-                                            </c:otherwise>
-                                        </c:choose>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="telefone" class="form-label">Telefone</label>
+                                                <input type="tel" class="form-control" id="telefone" name="telefone" 
+                                                       value="<%=user.getTelefone() != null ? user.getTelefone() : ""%>" 
+                                                       placeholder="(11) 99999-9999">
+                                                <div class="form-text">Formato: (XX) XXXXX-XXXX</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="data_nascimento" class="form-label">Data de Nascimento</label>
+                                                <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" 
+                                                       value="<%=dataFormatada != null ? dataFormatada : ""%>">
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                
-                                <hr>
-                                
-                                <div class="d-flex justify-content-between align-items-center py-2">
-                                    <div>
-                                        <div class="fw-bold">Último login</div>
-                                        <small class="text-muted">
-                                            <c:choose>
-                                                <c:when test="${user.lastLoginAt != null}">
-                                                    <fmt:formatDate value="${user.lastLoginAt}" pattern="dd/MM/yyyy 'às' HH:mm" />
-                                                </c:when>
-                                                <c:otherwise>
-                                                    Primeiro acesso
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </small>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="genero" class="form-label">Gênero</label>
+                                                <select class="form-select" id="genero" name="genero">
+                                                    <option value="">Selecione...</option>
+                                                    <option value="M" <%="M".equals(user.getGenero()) ? "selected" : ""%>>Masculino</option>
+                                                    <option value="F" <%="F".equals(user.getGenero()) ? "selected" : ""%>>Feminino</option>
+                                                    <option value="O" <%="O".equals(user.getGenero()) ? "selected" : ""%>>Outro</option>
+                                                    <option value="N" <%="N".equals(user.getGenero()) ? "selected" : ""%>>Prefiro não informar</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <i class="fas fa-clock text-muted"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="d-flex justify-content-between align-items-center py-2">
-                                    <div>
-                                        <div class="fw-bold">Conta criada em</div>
-                                        <small class="text-muted">
-                                            <fmt:formatDate value="${user.createdAt}" pattern="dd/MM/yyyy" />
-                                        </small>
-                                    </div>
-                                    <div>
-                                        <i class="fas fa-user-plus text-muted"></i>
-                                    </div>
-                                </div>
-                                
-                                <hr>
-                                
-                                <div class="d-flex justify-content-between align-items-center py-2">
-                                    <div>
-                                        <div class="fw-bold text-danger">Excluir conta</div>
-                                        <small class="text-muted">Ação irreversível</small>
-                                    </div>
-                                    <div>
-                                        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
-                                            <i class="fas fa-trash me-1"></i>Excluir
+
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <button type="button" class="btn btn-outline-secondary me-md-2" onclick="resetForm()">
+                                            <i class="fas fa-undo me-1"></i>Cancelar
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-1"></i>Salvar Alterações
                                         </button>
                                     </div>
-                                </div>
+                                </form>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Modal de Confirmação de Exclusão -->
-    <div class="modal fade" id="deleteAccountModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Excluir Conta
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-danger">
-                        <i class="fas fa-warning me-2"></i>
-                        <strong>Atenção!</strong> Esta ação é irreversível.
+                    <!-- Tab Alterar Senha -->
+                    <div class="tab-pane fade" id="senha" role="tabpanel">
+                        <div class="card">
+                            <div class="card-body">
+                                <form action="${pageContext.request.contextPath}/perfil/alterar-senha" method="post" id="formSenha">
+                                    <div class="mb-3">
+                                        <label for="senha_atual" class="form-label">Senha Atual *</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="senha_atual" name="senha_atual" required>
+                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('senha_atual')">
+                                                <i class="fas fa-eye" id="senha_atual_icon"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="nova_senha" class="form-label">Nova Senha *</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="nova_senha" name="nova_senha" 
+                                                   required minlength="8" onkeyup="checkPasswordStrength()">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('nova_senha')">
+                                                <i class="fas fa-eye" id="nova_senha_icon"></i>
+                                            </button>
+                                        </div>
+                                        <div class="form-text">Mínimo 8 caracteres</div>
+                                        <div id="password_strength" class="mt-2"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="nova_senha_confirmation" class="form-label">Confirmar Nova Senha *</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="nova_senha_confirmation" 
+                                                   name="nova_senha_confirmation" required minlength="8" onkeyup="checkPasswordMatch()">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('nova_senha_confirmation')">
+                                                <i class="fas fa-eye" id="nova_senha_confirmation_icon"></i>
+                                            </button>
+                                        </div>
+                                        <div id="password_match" class="mt-2"></div>
+                                    </div>
+
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <button type="button" class="btn btn-outline-secondary me-md-2" onclick="resetPasswordForm()">
+                                            <i class="fas fa-undo me-1"></i>Cancelar
+                                        </button>
+                                        <button type="submit" class="btn btn-warning" id="btnAlterarSenha" disabled>
+                                            <i class="fas fa-key me-1"></i>Alterar Senha
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <p>Ao excluir sua conta:</p>
-                    <ul>
-                        <li>Todos os seus dados pessoais serão removidos</li>
-                        <li>Seu histórico de pedidos será anonimizado</li>
-                        <li>Você perderá acesso a favoritos e avaliações</li>
-                        <li>Não será possível recuperar a conta</li>
-                    </ul>
-                    
-                    <div class="mb-3">
-                        <label for="confirmPassword" class="form-label">Digite sua senha para confirmar:</label>
-                        <input type="password" class="form-control" id="confirmPassword" required>
-                    </div>
-                    
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="confirmDelete">
-                        <label class="form-check-label" for="confirmDelete">
-                            Entendo que esta ação é irreversível
-                        </label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        Cancelar
-                    </button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>
-                        <i class="fas fa-trash me-2"></i>Excluir Conta
-                    </button>
                 </div>
             </div>
         </div>
@@ -377,191 +196,172 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // Validação do formulário
-        (function() {
-            'use strict';
-            window.addEventListener('load', function() {
-                var forms = document.getElementsByClassName('needs-validation');
-                var validation = Array.prototype.filter.call(forms, function(form) {
-                    form.addEventListener('submit', function(event) {
-                        if (form.checkValidity() === false) {
-                            event.preventDefault();
-                            event.stopPropagation();
-                        }
-                        form.classList.add('was-validated');
-                    }, false);
-                });
-            }, false);
-        })();
-
-        // Toggle password visibility
+        // Toggle mostrar/ocultar senha
         function togglePassword(fieldId) {
             const field = document.getElementById(fieldId);
-            const button = field.nextElementSibling.querySelector('i');
+            const icon = document.getElementById(fieldId + '_icon');
             
             if (field.type === 'password') {
                 field.type = 'text';
-                button.classList.replace('fa-eye', 'fa-eye-slash');
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
             } else {
                 field.type = 'password';
-                button.classList.replace('fa-eye-slash', 'fa-eye');
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
             }
         }
 
-        // Validação de senha em tempo real
-        document.getElementById('nova_senha').addEventListener('input', function() {
-            const password = this.value;
-            const strengthBar = document.getElementById('passwordStrength');
-            const feedback = document.getElementById('passwordFeedback');
-            
-            let strength = 0;
-            let messages = [];
-            
-            if (password.length >= 8) strength++;
-            else messages.push('Mínimo 8 caracteres');
-            
-            if (/[a-z]/.test(password)) strength++;
-            else messages.push('Letras minúsculas');
-            
-            if (/[A-Z]/.test(password)) strength++;
-            else messages.push('Letras maiúsculas');
-            
-            if (/[0-9]/.test(password)) strength++;
-            else messages.push('Números');
-            
-            if (/[^A-Za-z0-9]/.test(password)) strength++;
-            else messages.push('Caracteres especiais');
-            
-            // Atualizar barra de força
-            strengthBar.style.width = (strength * 20) + '%';
-            
-            if (strength < 3) {
-                strengthBar.className = 'password-strength strength-weak';
-                feedback.textContent = 'Fraca: ' + messages.join(', ');
-                feedback.className = 'form-text text-danger';
-            } else if (strength < 5) {
-                strengthBar.className = 'password-strength strength-medium';
-                feedback.textContent = 'Média: ' + (messages.length > 0 ? messages.join(', ') : 'Boa senha');
-                feedback.className = 'form-text text-warning';
-            } else {
-                strengthBar.className = 'password-strength strength-strong';
-                feedback.textContent = 'Forte: Senha segura';
-                feedback.className = 'form-text text-success';
-            }
-        });
-
-        // Validação de confirmação de senha
-        document.getElementById('nova_senha_confirmation').addEventListener('input', function() {
+        // Verificar força da senha
+        function checkPasswordStrength() {
             const password = document.getElementById('nova_senha').value;
-            const confirmation = this.value;
+            const strengthDiv = document.getElementById('password_strength');
             
-            if (password !== confirmation) {
-                this.setCustomValidity('As senhas não coincidem');
-                this.classList.add('is-invalid');
+            if (password.length === 0) {
+                strengthDiv.innerHTML = '';
+                return;
+            }
+            
+            let score = 0;
+            let feedback = [];
+            
+            // Critérios de força
+            if (password.length >= 8) score++;
+            else feedback.push('Pelo menos 8 caracteres');
+            
+            if (/[a-z]/.test(password)) score++;
+            else feedback.push('Letras minúsculas');
+            
+            if (/[A-Z]/.test(password)) score++;
+            else feedback.push('Letras maiúsculas');
+            
+            if (/[0-9]/.test(password)) score++;
+            else feedback.push('Números');
+            
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+            else feedback.push('Caracteres especiais');
+            
+            // Determinar nível
+            let level, color, message;
+            if (score <= 2) {
+                level = 'Fraca';
+                color = 'danger';
+                message = 'Adicione: ' + feedback.slice(0, 2).join(', ');
+            } else if (score <= 3) {
+                level = 'Média';
+                color = 'warning';
+                message = 'Adicione: ' + feedback.slice(0, 1).join(', ');
+            } else if (score <= 4) {
+                level = 'Boa';
+                color = 'info';
+                message = 'Quase lá!';
             } else {
-                this.setCustomValidity('');
-                this.classList.remove('is-invalid');
-                this.classList.add('is-valid');
-            }
-        });
-
-        // Formatação de telefone
-        document.getElementById('telefone').addEventListener('input', function() {
-            let value = this.value.replace(/\D/g, '');
-            
-            if (value.length <= 11) {
-                if (value.length <= 2) {
-                    value = value.replace(/(\d{0,2})/, '($1');
-                } else if (value.length <= 6) {
-                    value = value.replace(/(\d{2})(\d{0,4})/, '($1) $2');
-                } else if (value.length <= 10) {
-                    value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-                } else {
-                    value = value.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
-                }
+                level = 'Forte';
+                color = 'success';
+                message = 'Senha segura';
             }
             
-            this.value = value;
-        });
-
-        // Formatação de CPF
-        document.getElementById('cpf').addEventListener('input', function() {
-            let value = this.value.replace(/\D/g, '');
+            strengthDiv.innerHTML = `
+                <div class="text-${color}">
+                    <small><strong>Força: ${level}</strong> - ${message}</small>
+                </div>
+            `;
             
-            if (value.length <= 11) {
-                value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-            }
-            
-            this.value = value;
-        });
-
-        // Validação de e-mail em tempo real
-        document.getElementById('email').addEventListener('blur', function() {
-            const email = this.value;
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            
-            if (email && !emailRegex.test(email)) {
-                this.setCustomValidity('E-mail deve ter um formato válido');
-                this.classList.add('is-invalid');
-            } else {
-                this.setCustomValidity('');
-                this.classList.remove('is-invalid');
-                if (email) this.classList.add('is-valid');
-            }
-        });
-
-        // Modal de exclusão de conta
-        const confirmPassword = document.getElementById('confirmPassword');
-        const confirmDelete = document.getElementById('confirmDelete');
-        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-
-        function checkDeleteConfirmation() {
-            confirmDeleteBtn.disabled = !(confirmPassword.value && confirmDelete.checked);
+            checkPasswordMatch();
         }
 
-        confirmPassword.addEventListener('input', checkDeleteConfirmation);
-        confirmDelete.addEventListener('change', checkDeleteConfirmation);
-
-        confirmDeleteBtn.addEventListener('click', function() {
-            if (confirm('Tem certeza absoluta que deseja excluir sua conta? Esta ação não pode ser desfeita.')) {
-                // Aqui faria a requisição para excluir a conta
-                alert('Funcionalidade de exclusão será implementada em breve.');
+        // Verificar se senhas coincidem
+        function checkPasswordMatch() {
+            const password = document.getElementById('nova_senha').value;
+            const confirm = document.getElementById('nova_senha_confirmation').value;
+            const matchDiv = document.getElementById('password_match');
+            const btnSubmit = document.getElementById('btnAlterarSenha');
+            
+            if (confirm.length === 0) {
+                matchDiv.innerHTML = '';
+                btnSubmit.disabled = true;
+                return;
             }
+            
+            if (password === confirm && password.length >= 8) {
+                matchDiv.innerHTML = '<small class="text-success"><i class="fas fa-check me-1"></i>Senhas coincidem</small>';
+                btnSubmit.disabled = false;
+            } else {
+                matchDiv.innerHTML = '<small class="text-danger"><i class="fas fa-times me-1"></i>Senhas não coincidem</small>';
+                btnSubmit.disabled = true;
+            }
+        }
+
+        // Reset form dados
+        function resetForm() {
+            document.getElementById('formDados').reset();
+        }
+
+        // Reset form senha
+        function resetPasswordForm() {
+            document.getElementById('formSenha').reset();
+            document.getElementById('password_strength').innerHTML = '';
+            document.getElementById('password_match').innerHTML = '';
+            document.getElementById('btnAlterarSenha').disabled = true;
+        }
+
+        // Máscara de telefone
+        document.getElementById('telefone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            if (value.length >= 11) {
+                value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+            } else if (value.length >= 7) {
+                value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+            } else if (value.length >= 3) {
+                value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+            }
+            
+            e.target.value = value;
         });
 
-        // Auto-save em caso de mudanças não salvas
-        let formChanged = false;
-        const profileForm = document.getElementById('profileForm');
-        const originalFormData = new FormData(profileForm);
-
-        profileForm.addEventListener('input', function() {
-            formChanged = true;
-        });
-
-        window.addEventListener('beforeunload', function(e) {
-            if (formChanged) {
+        // Validação do formulário principal
+        document.getElementById('formDados').addEventListener('submit', function(e) {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            
+            if (name.length < 2) {
                 e.preventDefault();
-                e.returnValue = 'Você tem alterações não salvas. Deseja realmente sair?';
-                return e.returnValue;
+                alert('Nome deve ter pelo menos 2 caracteres');
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                e.preventDefault();
+                alert('E-mail inválido');
+                return;
             }
         });
 
-        profileForm.addEventListener('submit', function() {
-            formChanged = false;
+        // Validação do formulário de senha
+        document.getElementById('formSenha').addEventListener('submit', function(e) {
+            const senhaAtual = document.getElementById('senha_atual').value;
+            const novaSenha = document.getElementById('nova_senha').value;
+            const confirmacao = document.getElementById('nova_senha_confirmation').value;
+            
+            if (senhaAtual.length === 0) {
+                e.preventDefault();
+                alert('Informe a senha atual');
+                return;
+            }
+            
+            if (novaSenha.length < 8) {
+                e.preventDefault();
+                alert('Nova senha deve ter pelo menos 8 caracteres');
+                return;
+            }
+            
+            if (novaSenha !== confirmacao) {
+                e.preventDefault();
+                alert('Confirmação de senha não confere');
+                return;
+            }
         });
-
-        // Mensagens de feedback automático
-        setTimeout(function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
-                const closeBtn = alert.querySelector('.btn-close');
-                if (closeBtn) {
-                    setTimeout(function() {
-                        closeBtn.click();
-                    }, 5000);
-                }
-            });
-        }, 100);
     </script>
 </body>
 </html>

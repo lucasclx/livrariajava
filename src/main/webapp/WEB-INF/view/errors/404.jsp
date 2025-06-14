@@ -2,55 +2,43 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="h-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Página não encontrada - Livraria Mil Páginas</title>
     
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <link href="${pageContext.request.contextPath}/assets/css/style.css" rel="stylesheet">
     
     <style>
-        :root {
-            --primary-color: #667eea;
-            --secondary-color: #764ba2;
-            --accent-color: #f093fb;
-            --text-dark: #2c3e50;
-            --text-light: #7f8c8d;
-            --danger-color: #e74c3c;
-            --warning-color: #f39c12;
-            --success-color: #27ae60;
-            --white: #ffffff;
-            --light-bg: #f8f9fa;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 70%, var(--accent-color) 100%);
+            background: linear-gradient(135deg, var(--aged-paper) 0%, var(--cream) 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow-x: hidden;
+            font-family: var(--font-body);
         }
 
         .error-container {
-            background: var(--white);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            background: rgba(253, 246, 227, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius-large);
+            box-shadow: var(--shadow-extra-large);
+            border: 1px solid rgba(139, 69, 19, 0.1);
             padding: 3rem 2rem;
             text-align: center;
             max-width: 800px;
@@ -58,7 +46,6 @@
             margin: 2rem;
             position: relative;
             overflow: hidden;
-            animation: slideInUp 0.6s ease-out;
         }
 
         .error-container::before {
@@ -68,7 +55,7 @@
             left: 0;
             right: 0;
             height: 5px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+            background: var(--gradient-gold);
         }
 
         .error-animation {
@@ -79,262 +66,93 @@
         .error-number {
             font-size: 8rem;
             font-weight: 700;
+            font-family: var(--font-serif);
             background: linear-gradient(135deg, var(--danger-color), var(--warning-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             margin-bottom: 1rem;
-            animation: bounce 2s infinite;
             line-height: 1;
+            animation: bounce 2s infinite;
         }
 
         .error-icon {
             font-size: 4rem;
-            color: var(--warning-color);
+            color: var(--primary-brown);
             margin-bottom: 1.5rem;
-            animation: wobble 3s infinite;
+            animation: float 3s ease-in-out infinite;
         }
 
         .error-title {
             font-size: 2.5rem;
             font-weight: 600;
-            color: var(--text-dark);
+            font-family: var(--font-serif);
+            color: var(--dark-brown);
             margin-bottom: 1rem;
         }
 
         .error-subtitle {
             font-size: 1.2rem;
-            color: var(--text-light);
+            color: var(--secondary-color);
             margin-bottom: 2rem;
             line-height: 1.6;
-        }
-
-        .error-description {
-            background: var(--light-bg);
-            border-left: 4px solid var(--warning-color);
-            padding: 1.5rem;
-            margin: 2rem 0;
-            border-radius: 0 10px 10px 0;
-            text-align: left;
-        }
-
-        .error-description h5 {
-            color: var(--text-dark);
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-
-        .error-description ul {
-            margin-bottom: 0;
-            padding-left: 1.5rem;
-        }
-
-        .error-description li {
-            margin-bottom: 0.5rem;
-            color: var(--text-light);
-        }
-
-        .action-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            justify-content: center;
-            margin: 2rem 0;
-        }
-
-        .btn-custom {
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
-            font-weight: 500;
-            border-radius: 50px;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            min-width: 180px;
-            justify-content: center;
-        }
-
-        .btn-primary-custom {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: var(--white);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-primary-custom:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-            color: var(--white);
-        }
-
-        .btn-outline-custom {
-            background: transparent;
-            border: 2px solid var(--primary-color);
-            color: var(--primary-color);
-        }
-
-        .btn-outline-custom:hover {
-            background: var(--primary-color);
-            color: var(--white);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-success-custom {
-            background: linear-gradient(135deg, var(--success-color), #2ecc71);
-            color: var(--white);
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
-        }
-
-        .btn-success-custom:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.6);
-            color: var(--white);
-        }
-
-        .suggestions-section {
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 1px solid #e9ecef;
-        }
-
-        .suggestions-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--text-dark);
-            margin-bottom: 1.5rem;
         }
 
         .suggestions-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
-            margin-bottom: 2rem;
+            margin: 2rem 0;
         }
 
         .suggestion-card {
-            background: var(--light-bg);
+            background: white;
             padding: 1.5rem 1rem;
-            border-radius: 10px;
+            border-radius: var(--border-radius-medium);
             text-decoration: none;
             color: inherit;
-            transition: all 0.3s ease;
+            transition: var(--transition-normal);
             border: 2px solid transparent;
+            box-shadow: var(--shadow-small);
         }
 
         .suggestion-card:hover {
-            background: var(--white);
-            border-color: var(--primary-color);
+            background: var(--cream);
+            border-color: var(--primary-brown);
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-medium);
             color: inherit;
             text-decoration: none;
         }
 
         .suggestion-icon {
             font-size: 2rem;
-            color: var(--primary-color);
+            color: var(--primary-brown);
             margin-bottom: 0.5rem;
         }
 
         .suggestion-title {
             font-weight: 600;
-            color: var(--text-dark);
+            color: var(--dark-brown);
             margin-bottom: 0.25rem;
             font-size: 1rem;
         }
 
         .suggestion-desc {
             font-size: 0.9rem;
-            color: var(--text-light);
+            color: var(--secondary-color);
             margin: 0;
         }
 
-        .debug-info {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-top: 2rem;
-            text-align: left;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
+        .search-section {
+            background: white;
+            border-radius: var(--border-radius-medium);
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: var(--shadow-small);
         }
 
-        .debug-info h6 {
-            color: var(--text-dark);
-            margin-bottom: 1rem;
-            font-family: 'Poppins', sans-serif;
-            font-weight: 600;
-        }
-
-        .debug-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .debug-item:last-child {
-            border-bottom: none;
-        }
-
-        .debug-label {
-            font-weight: 600;
-            color: var(--text-dark);
-            min-width: 140px;
-        }
-
-        .debug-value {
-            color: var(--text-light);
-            word-break: break-all;
-            text-align: right;
-            max-width: 70%;
-        }
-
-        .footer-info {
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #e9ecef;
-            font-size: 0.9rem;
-            color: var(--text-light);
-        }
-
-        .back-to-top {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            width: 50px;
-            height: 50px;
-            background: var(--primary-color);
-            color: var(--white);
-            border: none;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            opacity: 0;
-            visibility: hidden;
-            z-index: 1000;
-        }
-
-        .back-to-top.visible {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .back-to-top:hover {
-            background: var(--secondary-color);
-            transform: translateY(-3px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .floating-shapes {
+        .floating-books {
             position: fixed;
             top: 0;
             left: 0;
@@ -342,101 +160,53 @@
             height: 100%;
             pointer-events: none;
             z-index: -1;
+            overflow: hidden;
         }
 
-        .shape {
+        .floating-book {
             position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            animation: float 6s ease-in-out infinite;
+            font-size: 2rem;
+            color: rgba(139, 69, 19, 0.1);
+            animation: floatAround 15s infinite linear;
         }
 
-        .shape:nth-child(1) {
-            width: 80px;
-            height: 80px;
-            top: 10%;
-            left: 10%;
-            animation-delay: 0s;
+        .floating-book:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+        .floating-book:nth-child(2) { top: 20%; right: 10%; animation-delay: 3s; }
+        .floating-book:nth-child(3) { bottom: 30%; left: 20%; animation-delay: 6s; }
+        .floating-book:nth-child(4) { bottom: 10%; right: 30%; animation-delay: 9s; }
+        .floating-book:nth-child(5) { top: 50%; left: 5%; animation-delay: 12s; }
+
+        @keyframes floatAround {
+            0% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+            25% { transform: translateY(-20px) rotate(90deg); opacity: 0.6; }
+            50% { transform: translateY(-10px) rotate(180deg); opacity: 0.3; }
+            75% { transform: translateY(-30px) rotate(270deg); opacity: 0.6; }
+            100% { transform: translateY(0px) rotate(360deg); opacity: 0.3; }
         }
 
-        .shape:nth-child(2) {
-            width: 120px;
-            height: 120px;
-            top: 70%;
-            right: 10%;
-            animation-delay: 2s;
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            z-index: 1000;
         }
 
-        .shape:nth-child(3) {
-            width: 60px;
-            height: 60px;
-            bottom: 10%;
-            left: 20%;
-            animation-delay: 4s;
+        .debug-info {
+            background: rgba(248, 249, 250, 0.95);
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius-medium);
+            padding: 1.5rem;
+            margin-top: 2rem;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
         }
 
-        .shape:nth-child(4) {
-            width: 100px;
-            height: 100px;
-            top: 30%;
-            right: 30%;
-            animation-delay: 1s;
-        }
-
-        .shape:nth-child(5) {
-            width: 70px;
-            height: 70px;
-            bottom: 40%;
-            right: 15%;
-            animation-delay: 3s;
-        }
-
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes bounce {
-            0%, 20%, 53%, 80%, 100% {
-                animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
-                transform: translate3d(0, 0, 0);
-            }
-            40%, 43% {
-                animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
-                transform: translate3d(0, -10px, 0);
-            }
-            70% {
-                animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
-                transform: translate3d(0, -5px, 0);
-            }
-            90% {
-                transform: translate3d(0, -2px, 0);
-            }
-        }
-
-        @keyframes wobble {
-            0% { transform: translateX(0%); }
-            15% { transform: translateX(-25px) rotate(-5deg); }
-            30% { transform: translateX(20px) rotate(3deg); }
-            45% { transform: translateX(-15px) rotate(-3deg); }
-            60% { transform: translateX(10px) rotate(2deg); }
-            75% { transform: translateX(-5px) rotate(-1deg); }
-            100% { transform: translateX(0%); }
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0px) rotate(0deg);
-            }
-            50% {
-                transform: translateY(-20px) rotate(180deg);
-            }
+        .breadcrumb-nav {
+            background: rgba(139, 69, 19, 0.1);
+            padding: 1rem;
+            border-radius: var(--border-radius-medium);
+            margin-bottom: 2rem;
         }
 
         @media (max-width: 768px) {
@@ -457,72 +227,36 @@
                 font-size: 1rem;
             }
 
-            .action-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .btn-custom {
-                min-width: 250px;
-            }
-
             .suggestions-grid {
                 grid-template-columns: 1fr;
             }
 
-            .debug-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.25rem;
-            }
-
-            .debug-value {
-                text-align: left;
-                max-width: 100%;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .error-number {
-                font-size: 4rem;
-            }
-
-            .error-title {
-                font-size: 1.5rem;
-            }
-        }
-
-        /* Print styles */
-        @media print {
-            .floating-shapes,
-            .back-to-top,
-            .action-buttons {
-                display: none;
-            }
-
-            .error-container {
-                box-shadow: none;
-                background: white;
-            }
-
-            body {
-                background: white;
+            .back-button {
+                position: static;
+                margin-bottom: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Floating Background Shapes -->
-    <div class="floating-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
+    <!-- Floating Books Background -->
+    <div class="floating-books">
+        <div class="floating-book">📚</div>
+        <div class="floating-book">📖</div>
+        <div class="floating-book">📕</div>
+        <div class="floating-book">📗</div>
+        <div class="floating-book">📘</div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="back-button">
+        <button onclick="history.back()" class="btn btn-outline-elegant hover-lift">
+            <i class="fas fa-arrow-left me-2"></i>Voltar
+        </button>
     </div>
 
     <!-- Main Error Container -->
-    <div class="error-container">
+    <div class="error-container fade-in-up">
         <!-- Error Animation Section -->
         <div class="error-animation">
             <div class="error-icon">
@@ -534,219 +268,211 @@
         <!-- Error Content -->
         <h1 class="error-title">Oops! Página não encontrada</h1>
         <p class="error-subtitle">
-            A página que você está procurando pode ter sido movida, renomeada ou não existe mais. 
-            Mas não se preocupe, temos várias opções para ajudá-lo!
+            Parece que a página que você está procurando se perdeu entre as estantes da nossa biblioteca digital. 
+            Mas não se preocupe, temos várias opções para ajudá-lo a encontrar o que procura!
         </p>
 
-        <!-- Detailed Error Information -->
-        <div class="error-description">
-            <h5><i class="fas fa-lightbulb"></i> Possíveis causas:</h5>
-            <ul>
+        <!-- Breadcrumb Navigation -->
+        <div class="breadcrumb-nav">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 justify-content-center">
+                    <li class="breadcrumb-item">
+                        <a href="${pageContext.request.contextPath}/" class="text-decoration-none hover-gold">
+                            <i class="fas fa-home me-1"></i>Início
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">Página não encontrada</li>
+                </ol>
+            </nav>
+            <small class="text-muted d-block mt-1">
+                <i class="fas fa-link me-1"></i>
+                URL solicitada: <code>${pageContext.request.requestURI}</code>
+            </small>
+        </div>
+
+        <!-- Quick Search -->
+        <div class="search-section">
+            <h4 class="mb-3">
+                <i class="fas fa-search me-2"></i>Que tal uma busca?
+            </h4>
+            <form action="${pageContext.request.contextPath}/search" method="GET">
+                <div class="input-group input-group-lg">
+                    <input type="text" name="q" class="form-control" 
+                           placeholder="Buscar livros, autores, categorias..." 
+                           value="${param.q}">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search me-2"></i>Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Navigation Suggestions -->
+        <h3 class="mb-4">
+            <i class="fas fa-compass me-2"></i>
+            Explore nosso site:
+        </h3>
+
+        <div class="suggestions-grid">
+            <a href="${pageContext.request.contextPath}/" class="suggestion-card hover-lift">
+                <div class="suggestion-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <div class="suggestion-title">Página Inicial</div>
+                <p class="suggestion-desc">Volte para nossa página principal</p>
+            </a>
+
+            <a href="${pageContext.request.contextPath}/loja/catalogo" class="suggestion-card hover-lift">
+                <div class="suggestion-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="suggestion-title">Catálogo</div>
+                <p class="suggestion-desc">Explore nossa coleção completa</p>
+            </a>
+
+            <a href="${pageContext.request.contextPath}/search" class="suggestion-card hover-lift">
+                <div class="suggestion-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="suggestion-title">Buscar</div>
+                <p class="suggestion-desc">Encontre livros específicos</p>
+            </a>
+
+            <c:choose>
+                <c:when test="${sessionScope.user != null}">
+                    <a href="${pageContext.request.contextPath}/perfil" class="suggestion-card hover-lift">
+                        <div class="suggestion-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="suggestion-title">Meu Perfil</div>
+                        <p class="suggestion-desc">Gerencie sua conta</p>
+                    </a>
+                </c:when>
+                <c:otherwise>
+                    <a href="${pageContext.request.contextPath}/login" class="suggestion-card hover-lift">
+                        <div class="suggestion-icon">
+                            <i class="fas fa-sign-in-alt"></i>
+                        </div>
+                        <div class="suggestion-title">Login</div>
+                        <p class="suggestion-desc">Acesse sua conta</p>
+                    </a>
+                </c:otherwise>
+            </c:choose>
+
+            <a href="${pageContext.request.contextPath}/cart" class="suggestion-card hover-lift">
+                <div class="suggestion-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="suggestion-title">Carrinho</div>
+                <p class="suggestion-desc">Seus itens salvos</p>
+            </a>
+
+            <a href="${pageContext.request.contextPath}/loja/favoritos" class="suggestion-card hover-lift">
+                <div class="suggestion-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="suggestion-title">Favoritos</div>
+                <p class="suggestion-desc">Seus livros favoritos</p>
+            </a>
+
+            <a href="${pageContext.request.contextPath}/contato" class="suggestion-card hover-lift">
+                <div class="suggestion-icon">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="suggestion-title">Contato</div>
+                <p class="suggestion-desc">Fale conosco</p>
+            </a>
+
+            <a href="${pageContext.request.contextPath}/ajuda" class="suggestion-card hover-lift">
+                <div class="suggestion-icon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <div class="suggestion-title">Ajuda</div>
+                <p class="suggestion-desc">Central de ajuda</p>
+            </a>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex flex-column flex-md-row justify-content-center gap-3 mt-4">
+            <a href="${pageContext.request.contextPath}/" class="btn btn-primary btn-lg hover-lift">
+                <i class="fas fa-home me-2"></i>Página Inicial
+            </a>
+            <a href="${pageContext.request.contextPath}/loja/catalogo" class="btn btn-gold btn-lg hover-lift">
+                <i class="fas fa-book me-2"></i>Ver Catálogo
+            </a>
+            <button onclick="history.back()" class="btn btn-outline-elegant btn-lg hover-lift">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </button>
+        </div>
+
+        <!-- Help Section -->
+        <div class="mt-5 p-4 bg-light rounded">
+            <h5 class="mb-3">
+                <i class="fas fa-lightbulb me-2"></i>
+                Possíveis causas do erro:
+            </h5>
+            <ul class="text-start">
                 <li>A URL foi digitada incorretamente</li>
                 <li>A página foi movida ou renomeada</li>
                 <li>O link que você clicou está desatualizado</li>
                 <li>A página pode estar temporariamente indisponível</li>
             </ul>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <a href="${pageContext.request.contextPath}/" class="btn-custom btn-primary-custom">
-                <i class="fas fa-home"></i>
-                Página Inicial
-            </a>
             
-            <a href="${pageContext.request.contextPath}/loja/catalogo" class="btn-custom btn-success-custom">
-                <i class="fas fa-book"></i>
-                Ver Catálogo
-            </a>
-            
-            <button onclick="history.back()" class="btn-custom btn-outline-custom">
-                <i class="fas fa-arrow-left"></i>
-                Voltar
-            </button>
-        </div>
-
-        <!-- Suggestions Section -->
-        <div class="suggestions-section">
-            <h3 class="suggestions-title">
-                <i class="fas fa-compass"></i>
-                Explore nosso site:
-            </h3>
-
-            <div class="suggestions-grid">
-                <a href="${pageContext.request.contextPath}/loja/" class="suggestion-card">
-                    <div class="suggestion-icon">
-                        <i class="fas fa-store"></i>
-                    </div>
-                    <div class="suggestion-title">Loja Principal</div>
-                    <p class="suggestion-desc">Explore nossa coleção completa</p>
-                </a>
-
-                <a href="${pageContext.request.contextPath}/loja/favoritos" class="suggestion-card">
-                    <div class="suggestion-icon">
-                        <i class="fas fa-heart"></i>
-                    </div>
-                    <div class="suggestion-title">Favoritos</div>
-                    <p class="suggestion-desc">Seus livros favoritos</p>
-                </a>
-
-                <a href="${pageContext.request.contextPath}/cart/" class="suggestion-card">
-                    <div class="suggestion-icon">
-                        <i class="fas fa-shopping-cart"></i>
-                    </div>
-                    <div class="suggestion-title">Carrinho</div>
-                    <p class="suggestion-desc">Seus itens salvos</p>
-                </a>
-
-                <c:choose>
-                    <c:when test="${sessionScope.user != null}">
-                        <a href="${pageContext.request.contextPath}/perfil/" class="suggestion-card">
-                            <div class="suggestion-icon">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="suggestion-title">Meu Perfil</div>
-                            <p class="suggestion-desc">Gerenciar sua conta</p>
-                        </a>
-                    </c:when>
-                    <c:otherwise>
-                        <a href="${pageContext.request.contextPath}/login" class="suggestion-card">
-                            <div class="suggestion-icon">
-                                <i class="fas fa-sign-in-alt"></i>
-                            </div>
-                            <div class="suggestion-title">Login</div>
-                            <p class="suggestion-desc">Acesse sua conta</p>
-                        </a>
-                    </c:otherwise>
-                </c:choose>
-            </div>
-
-            <!-- Search Form -->
-            <div class="mt-4">
-                <form action="${pageContext.request.contextPath}/loja/buscar" method="GET" class="d-flex justify-content-center">
-                    <div class="input-group" style="max-width: 400px;">
-                        <input type="text" class="form-control" name="q" 
-                               placeholder="Buscar livros..." 
-                               value="${param.q}"
-                               style="border-radius: 25px 0 0 25px; border-right: none;">
-                        <button class="btn btn-primary" type="submit" 
-                                style="border-radius: 0 25px 25px 0; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border: none;">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </form>
+            <div class="mt-3">
+                <p class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Se você continuar enfrentando problemas, 
+                    <a href="${pageContext.request.contextPath}/contato" class="hover-gold">
+                        entre em contato conosco
+                    </a>.
+                </p>
             </div>
         </div>
 
         <!-- Debug Information (only in development) -->
-        <c:set var="showDebug" value="${param.debug eq 'true' or (not empty pageContext.request.getParameter('debug'))}" />
-        <c:if test="${showDebug or (not empty applicationScope.appEnvironment and applicationScope.appEnvironment eq 'development')}">
+        <c:set var="showDebug" value="${param.debug eq 'true' or (not empty applicationScope.appEnvironment and applicationScope.appEnvironment eq 'development')}" />
+        <c:if test="${showDebug}">
             <div class="debug-info">
-                <h6><i class="fas fa-bug"></i> Informações de Debug</h6>
+                <h6><i class="fas fa-bug me-2"></i>Informações de Debug</h6>
                 
-                <div class="debug-item">
-                    <span class="debug-label">Status HTTP:</span>
-                    <span class="debug-value">404 - Not Found</span>
-                </div>
-                
-                <div class="debug-item">
-                    <span class="debug-label">URL Solicitada:</span>
-                    <span class="debug-value">${pageContext.request.requestURL}</span>
-                </div>
-                
-                <div class="debug-item">
-                    <span class="debug-label">URI:</span>
-                    <span class="debug-value">${pageContext.request.requestURI}</span>
-                </div>
-                
-                <div class="debug-item">
-                    <span class="debug-label">Context Path:</span>
-                    <span class="debug-value">${pageContext.request.contextPath}</span>
-                </div>
-                
-                <div class="debug-item">
-                    <span class="debug-label">Query String:</span>
-                    <span class="debug-value">${not empty pageContext.request.queryString ? pageContext.request.queryString : 'Nenhuma'}</span>
-                </div>
-                
-                <div class="debug-item">
-                    <span class="debug-label">Method:</span>
-                    <span class="debug-value">${pageContext.request.method}</span>
-                </div>
-                
-                <div class="debug-item">
-                    <span class="debug-label">User Agent:</span>
-                    <span class="debug-value">${pageContext.request.getHeader('User-Agent')}</span>
-                </div>
-                
-                <div class="debug-item">
-                    <span class="debug-label">Referer:</span>
-                    <span class="debug-value">${not empty pageContext.request.getHeader('Referer') ? pageContext.request.getHeader('Referer') : 'Nenhum'}</span>
-                </div>
-                
-                <div class="debug-item">
-                    <span class="debug-label">IP do Cliente:</span>
-                    <span class="debug-value">${pageContext.request.remoteAddr}</span>
-                </div>
-                
-                <div class="debug-item">
-                    <span class="debug-label">Timestamp:</span>
-                    <span class="debug-value">
-                        <fmt:formatDate value="<%= new java.util.Date() %>" 
-                                       pattern="dd/MM/yyyy HH:mm:ss" />
-                    </span>
-                </div>
-                
-                <div class="debug-item">
-                    <span class="debug-label">Sessão ID:</span>
-                    <span class="debug-value">${pageContext.session.id}</span>
-                </div>
-                
-                <div class="debug-item">
-                    <span class="debug-label">Usuário Logado:</span>
-                    <span class="debug-value">${not empty sessionScope.user ? sessionScope.user.name : 'Não logado'}</span>
-                </div>
-                
-                <div class="debug-item">
-                    <span class="debug-label">Servidor:</span>
-                    <span class="debug-value"><%= application.getServerInfo() %></span>
-                </div>
-                
-                <div class="debug-item">
-                    <span class="debug-label">Java Version:</span>
-                    <span class="debug-value"><%= System.getProperty("java.version") %></span>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <strong>Status HTTP:</strong> 404 - Not Found<br>
+                        <strong>URL:</strong> ${pageContext.request.requestURL}<br>
+                        <strong>URI:</strong> ${pageContext.request.requestURI}<br>
+                        <strong>Context:</strong> ${pageContext.request.contextPath}<br>
+                        <strong>Query:</strong> ${not empty pageContext.request.queryString ? pageContext.request.queryString : 'Nenhuma'}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Method:</strong> ${pageContext.request.method}<br>
+                        <strong>Referer:</strong> ${not empty pageContext.request.getHeader('Referer') ? pageContext.request.getHeader('Referer') : 'Nenhum'}<br>
+                        <strong>IP:</strong> ${pageContext.request.remoteAddr}<br>
+                        <strong>Timestamp:</strong> <fmt:formatDate value="<%= new java.util.Date() %>" pattern="dd/MM/yyyy HH:mm:ss" /><br>
+                        <strong>Sessão:</strong> ${pageContext.session.id}
+                    </div>
                 </div>
             </div>
         </c:if>
 
         <!-- Footer Information -->
-        <div class="footer-info">
-            <p>
-                <i class="fas fa-info-circle"></i>
-                Se você continuar enfrentando problemas, entre em contato com nosso suporte.
+        <div class="mt-4 pt-4 border-top">
+            <p class="mb-2">
+                <strong>Livraria Mil Páginas</strong> - Onde cada página é uma nova jornada
             </p>
-            <p class="mb-0">
-                <strong>Livraria Mil Páginas</strong> - 
+            <p class="mb-0 small text-muted">
                 &copy; <fmt:formatDate value="<%= new java.util.Date() %>" pattern="yyyy" />
                 Todos os direitos reservados.
             </p>
         </div>
     </div>
 
-    <!-- Back to Top Button -->
-    <button class="back-to-top" onclick="scrollToTop()" title="Voltar ao topo">
-        <i class="fas fa-chevron-up"></i>
-    </button>
-
-    <!-- Bootstrap JS -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Custom JavaScript -->
     <script>
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             initializeErrorPage();
-            setupBackToTop();
             logError();
         });
 
@@ -791,27 +517,6 @@
                 card.addEventListener('mouseleave', function() {
                     this.style.transform = 'translateY(0) scale(1)';
                 });
-            });
-        }
-
-        // Setup back to top functionality
-        function setupBackToTop() {
-            const backToTopButton = document.querySelector('.back-to-top');
-            
-            window.addEventListener('scroll', function() {
-                if (window.pageYOffset > 300) {
-                    backToTopButton.classList.add('visible');
-                } else {
-                    backToTopButton.classList.remove('visible');
-                }
-            });
-        }
-
-        // Scroll to top function
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
             });
         }
 
@@ -876,58 +581,6 @@
             }
         });
 
-        // Add tooltip functionality
-        function initializeTooltips() {
-            const tooltipElements = document.querySelectorAll('[title]');
-            tooltipElements.forEach(element => {
-                element.addEventListener('mouseenter', function() {
-                    const tooltip = document.createElement('div');
-                    tooltip.className = 'custom-tooltip';
-                    tooltip.textContent = this.getAttribute('title');
-                    tooltip.style.cssText = `
-                        position: absolute;
-                        background: rgba(0, 0, 0, 0.8);
-                        color: white;
-                        padding: 0.5rem;
-                        border-radius: 4px;
-                        font-size: 0.8rem;
-                        z-index: 1000;
-                        pointer-events: none;
-                        opacity: 0;
-                        transition: opacity 0.3s;
-                    `;
-                    
-                    document.body.appendChild(tooltip);
-                    
-                    const rect = this.getBoundingClientRect();
-                    tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
-                    tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
-                    
-                    setTimeout(() => tooltip.style.opacity = '1', 10);
-                    
-                    this.tooltipElement = tooltip;
-                });
-
-                element.addEventListener('mouseleave', function() {
-                    if (this.tooltipElement) {
-                        this.tooltipElement.remove();
-                        this.tooltipElement = null;
-                    }
-                });
-            });
-        }
-
-        // Initialize tooltips
-        setTimeout(initializeTooltips, 1000);
-
-        // Update page title with error info
-        document.title = '404 - Página não encontrada | Livraria Mil Páginas';
-
-        // Add custom console message
-        console.log('%c🔍 Página não encontrada!', 'font-size: 20px; color: #e74c3c; font-weight: bold;');
-        console.log('%cMas não se preocupe, nossa equipe já foi notificada.', 'font-size: 14px; color: #7f8c8d;');
-        console.log('%cVisite nossa página inicial: ${pageContext.request.contextPath}/', 'font-size: 12px; color: #3498db;');
-
         // Easter egg - konami code
         let konamiCode = [];
         const konamiSequence = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
@@ -957,7 +610,7 @@
                     transform: translate(-50%, -50%);
                     background: white;
                     padding: 2rem;
-                    border-radius: 10px;
+                    border-radius: 15px;
                     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
                     z-index: 10000;
                     text-align: center;
@@ -965,10 +618,10 @@
                 ">
                     <h3>🎉 Easter Egg Descoberto!</h3>
                     <p>Você encontrou nosso segredo! 🕵️‍♂️</p>
+                    <p>Como um verdadeiro explorador de livros!</p>
                     <button onclick="this.parentElement.parentElement.remove()" 
-                            style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); 
-                                   color: white; border: none; padding: 0.5rem 1rem; border-radius: 25px; cursor: pointer;">
-                        Fechar
+                            class="btn btn-gold">
+                        Continuar Explorando
                     </button>
                 </div>
             `;
@@ -983,7 +636,7 @@
             }, 5000);
         }
 
-        // Add rainbow animation
+        // Add rainbow animation for easter egg
         const style = document.createElement('style');
         style.textContent = `
             @keyframes rainbow {
@@ -995,6 +648,81 @@
             }
         `;
         document.head.appendChild(style);
+
+        // Auto-suggest based on URL
+        function suggestAlternatives() {
+            const path = window.location.pathname;
+            const suggestions = [];
+
+            if (path.includes('livro')) {
+                suggestions.push('Talvez você queira ver nosso <a href="${pageContext.request.contextPath}/loja/catalogo">catálogo completo</a>?');
+            }
+            if (path.includes('autor')) {
+                suggestions.push('Que tal <a href="${pageContext.request.contextPath}/search">buscar por autor</a>?');
+            }
+            if (path.includes('categoria')) {
+                suggestions.push('Explore nossas <a href="${pageContext.request.contextPath}/loja/categorias">categorias</a>.');
+            }
+
+            if (suggestions.length > 0) {
+                const suggestionDiv = document.createElement('div');
+                suggestionDiv.className = 'alert alert-info mt-3';
+                suggestionDiv.innerHTML = '<i class="fas fa-lightbulb me-2"></i>' + suggestions[0];
+                document.querySelector('.error-subtitle').after(suggestionDiv);
+            }
+        }
+
+        // Call suggestion function
+        suggestAlternatives();
+
+        // Update page title with error info
+        document.title = '404 - Página não encontrada | Livraria Mil Páginas';
+
+        // Add custom console message
+        console.log('%c🔍 Página não encontrada!', 'font-size: 20px; color: #e74c3c; font-weight: bold;');
+        console.log('%cMas não se preocupe, nossa equipe já foi notificada.', 'font-size: 14px; color: #7f8c8d;');
+        console.log('%cVisite nossa página inicial: ${pageContext.request.contextPath}/', 'font-size: 12px; color: #3498db;');
+
+        // Auto-refresh suggestion (for development)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            setTimeout(() => {
+                const refreshDiv = document.createElement('div');
+                refreshDiv.className = 'alert alert-warning mt-3';
+                refreshDiv.innerHTML = `
+                    <i class="fas fa-sync-alt me-2"></i>
+                    Modo desenvolvimento detectado. 
+                    <button onclick="location.reload()" class="btn btn-warning btn-sm ms-2">
+                        Tentar Novamente
+                    </button>
+                `;
+                document.querySelector('.debug-info, .error-container').appendChild(refreshDiv);
+            }, 5000);
+        }
+
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+            toast.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+
+        // Check if coming from search and suggest alternatives
+        if (document.referrer.includes('search') || window.location.search.includes('q=')) {
+            setTimeout(() => {
+                showToast('Não encontrou o que procurava? Tente termos mais gerais.', 'info');
+            }, 2000);
+        }
     </script>
 
     <!-- Schema.org structured data for SEO -->

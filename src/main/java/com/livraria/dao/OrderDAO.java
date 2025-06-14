@@ -25,272 +25,7 @@ public class OrderDAO extends BaseDAO<Order> {
         return mapRowToOrder(rs);
     }
 
-    // ========== MÉTODOS DE RELATÓRIOS ==========
-
-    /**
-     * Calcula vendas por categoria em um período
-     */
-    public List<Object[]> calcularVendasPorCategoria(int dias) throws SQLException {
-        String sql = "SELECT c.nome, SUM(oi.quantity) as quantidade, SUM(oi.total_price) as valor " +
-                    "FROM order_items oi " +
-                    "JOIN orders o ON oi.order_id = o.id " +
-                    "JOIN livros l ON oi.livro_id = l.id " +
-                    "JOIN categorias c ON l.categoria_id = c.id " +
-                    "WHERE o.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY) " +
-                    "AND o.status NOT IN ('cancelled', 'payment_failed') " +
-                    "GROUP BY c.id, c.nome " +
-                    "ORDER BY valor DESC";
-        
-        return executeQuery(sql, rs -> new Object[]{
-            rs.getString("nome"),
-            rs.getInt("quantidade"),
-            rs.getBigDecimal("valor")
-        }, dias);
-    }
-
-    /**
-     * Calcula vendas diárias em um período
-     */
-    public List<Object[]> calcularVendasDiarias(int dias) throws SQLException {
-        String sql = "SELECT DATE(o.created_at) as data, COUNT(*) as pedidos, SUM(o.total) as valor " +
-                    "FROM orders o " +
-                    "WHERE o.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY) " +
-                    "AND o.status NOT IN ('cancelled', 'payment_failed') " +
-                    "GROUP BY DATE(o.created_at) " +
-                    "ORDER BY data DESC";
-        
-        return executeQuery(sql, rs -> new Object[]{
-            rs.getDate("data"),
-            rs.getInt("pedidos"),
-            rs.getBigDecimal("valor")
-        }, dias);
-    }
-
-    /**
-     * Busca pedidos por método de pagamento
-     */
-    public List<Object[]> estatisticasPorMetodoPagamento(int dias) throws SQLException {
-        String sql = "SELECT payment_method, COUNT(*) as quantidade, SUM(total) as valor " +
-                    "FROM orders " +
-                    "WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY) " +
-                    "AND status NOT IN ('cancelled', 'payment_failed') " +
-                    "GROUP BY payment_method " +
-                    "ORDER BY quantidade DESC";
-        
-        return executeQuery(sql, rs -> new Object[]{
-            rs.getString("payment_method"),
-            rs.getInt("quantidade"),
-            rs.getBigDecimal("valor")
-        }, dias);
-    }
-
-    // ========== MÉTODOS DE BUSCA COMPLETA ==========
-
-    /**
-     * Busca pedido completo com itens
-     */
-    public Order buscarPorIdCompleto(int orderId) throws SQLException {
-        Order order = buscarPorId(orderId);
-        if (order != null) {
-            List<OrderItem> itens = listarItensDoPedido(orderId);
-            // Nota: Order não tem setItems no modelo atual, mas poderia ser adicionado
-        }
-        return order;
-    }
-
-    // ========== MÉTODOS DE VALIDAÇÃO ==========
-
-    /**
-     * Verifica se pedido pode ser cancelado
-     */
-    public boolean podeCancelar(int orderId) throws SQLException {
-        String sql = "SELECT status FROM orders WHERE id = ?";
-        List<String> result = executeQuery(sql, rs -> rs.getString("status"), orderId);
-        
-        if (result.isEmpty()) return false;
-        
-        String status = result.get(0);
-        return Order.STATUS_PENDING_PAYMENT.equals(status) ||
-               Order.STATUS_CONFIRMED.equals(status) ||
-               Order.STATUS_PROCESSING.equals(status);
-    }
-
-    /**
-     * Verifica se pedido pode ser enviado
-     */
-    public boolean podeEnviar(int orderId) throws SQLException {
-        String sql = "SELECT status FROM orders WHERE id = ?";
-        List<String> result = executeQuery(sql, rs -> rs.getString("status"), orderId);
-        
-        if (result.isEmpty()) return false;
-        
-        String status = result.get(0);
-        return Order.STATUS_CONFIRMED.equals(status) ||
-               Order.STATUS_PROCESSING.equals(status);
-    }
-
-    // ========== MÉTODOS DE ESTOQUE ==========
-
-    /**
-     * Devolve estoque dos itens do pedido (para cancelamentos)
-     */
-    public void devolverEstoque(int orderId) throws SQLException {
-        String sql = "UPDATE livros l " +
-                    "JOIN order_items oi ON l.id = oi.livro_id " +
-                    "SET l.estoque = l.estoque + oi.quantity " +
-                    "WHERE oi.order_id = ?";
-        
-        executeUpdate(sql, orderId);
-    }
-
-    // ========== MÉTODOS DE MAPEAMENTO ==========
-
-    /**
-     * Mapeia ResultSet para Order
-     */
-    private Order mapRowToOrder(ResultSet rs) throws SQLException {
-        Order order = new Order();
-        order.setId(rs.getInt("id"));
-        order.setOrderNumber(rs.getString("order_number"));
-        order.setUserId(rs.getInt("user_id"));
-        order.setCartId((Integer) rs.getObject("cart_id"));
-        order.setCupomId((Integer) rs.getObject("cupom_id"));
-        order.setSubtotal(rs.getBigDecimal("subtotal"));
-        order.setDesconto(rs.getBigDecimal("desconto"));
-        order.setShippingCost(rs.getBigDecimal("shipping_cost"));
-        order.setTotal(rs.getBigDecimal("total"));
-        order.setPaymentMethod(rs.getString("payment_method"));
-        order.setStatus(rs.getString("status"));
-        order.setNotes(rs.getString("notes"));
-        order.setObservacoes(rs.getString("observacoes"));
-        order.setTrackingCode(rs.getString("tracking_code"));
-        
-        // Dados de endereço
-        order.setShippingRecipientName(rs.getString("shipping_recipient_name"));
-        order.setShippingStreet(rs.getString("shipping_street"));
-        order.setShippingNumber(rs.getString("shipping_number"));
-        order.setShippingComplement(rs.getString("shipping_complement"));
-        order.setShippingNeighborhood(rs.getString("shipping_neighborhood"));
-        order.setShippingCity(rs.getString("shipping_city"));
-        order.setShippingState(rs.getString("shipping_state"));
-        order.setShippingPostalCode(rs.getString("shipping_postal_code"));
-        order.setShippingReference(rs.getString("shipping_reference"));
-        
-        // Datas
-        order.setShippedAt(toLocalDateTime(rs.getTimestamp("shipped_at")));
-        order.setDeliveredAt(toLocalDateTime(rs.getTimestamp("delivered_at")));
-        order.setCreatedAt(toLocalDateTime(rs.getTimestamp("created_at")));
-        order.setUpdatedAt(toLocalDateTime(rs.getTimestamp("updated_at")));
-        
-        return order;
-    }
-
-    /**
-     * Mapeia ResultSet para Order com dados do usuário
-     */
-    private Order mapRowToOrderWithUser(ResultSet rs) throws SQLException {
-        Order order = mapRowToOrder(rs);
-        
-        // Adicionar dados do usuário se disponíveis
-        try {
-            if (hasColumn(rs, "user_name")) {
-                User user = new User();
-                user.setId(order.getUserId());
-                user.setName(rs.getString("user_name"));
-                order.setUser(user);
-            }
-        } catch (SQLException e) {
-            // Dados do usuário podem não estar disponíveis
-        }
-        
-        return order;
-    }
-
-    /**
-     * Mapeia ResultSet para OrderItem
-     */
-    private OrderItem mapRowToOrderItem(ResultSet rs) throws SQLException {
-        OrderItem item = new OrderItem();
-        item.setId(rs.getInt("id"));
-        item.setOrderId(rs.getInt("order_id"));
-        item.setLivroId(rs.getInt("livro_id"));
-        item.setQuantity(rs.getInt("quantity"));
-        item.setUnitPrice(rs.getBigDecimal("unit_price"));
-        item.setTotalPrice(rs.getBigDecimal("total_price"));
-        item.setCreatedAt(toLocalDateTime(rs.getTimestamp("created_at")));
-        
-        return item;
-    }
-
-    /**
-     * Mapeia ResultSet para OrderItem com dados do livro
-     */
-    private OrderItem mapRowToOrderItemComLivro(ResultSet rs) throws SQLException {
-        OrderItem item = mapRowToOrderItem(rs);
-        
-        // Dados básicos do livro
-        try {
-            if (hasColumn(rs, "titulo")) {
-                Livro livro = new Livro();
-                livro.setId(item.getLivroId());
-                livro.setTitulo(rs.getString("titulo"));
-                livro.setAutor(rs.getString("autor"));
-                livro.setImagem(rs.getString("imagem"));
-                item.setLivro(livro);
-            }
-        } catch (SQLException e) {
-            // Dados do livro podem não estar disponíveis
-        }
-        
-        return item;
-    }
-
-    // ========== MÉTODOS ABSTRATOS DA BASEDAO ==========
-
-    @Override
-    public List<Order> findAll() {
-        try {
-            String sql = "SELECT * FROM orders ORDER BY created_at DESC";
-            return executeQuery(sql, this::mapRowToOrder);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public Order findById(Long id) {
-        try {
-            return buscarPorId(id.intValue());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public Order save(Order entity) {
-        throw new UnsupportedOperationException("Use criar(Connection, Order) para transações");
-    }
-
-    @Override
-    public Order update(Order entity) {
-        try {
-            atualizar(entity);
-            return entity;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public boolean delete(Long id) {
-        try {
-            String sql = "DELETE FROM orders WHERE id = ?";
-            return executeUpdate(sql, id) > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-} MÉTODOS BÁSICOS ==========
+    // ========== MÉTODOS BÁSICOS ==========
 
     /**
      * Busca pedido por ID
@@ -626,4 +361,269 @@ public class OrderDAO extends BaseDAO<Order> {
         return executeUpdate(sql, motivo, orderId) > 0;
     }
 
-    // ==========
+    // ========== MÉTODOS DE RELATÓRIOS ==========
+
+    /**
+     * Calcula vendas por categoria em um período
+     */
+    public List<Object[]> calcularVendasPorCategoria(int dias) throws SQLException {
+        String sql = "SELECT c.nome, SUM(oi.quantity) as quantidade, SUM(oi.total_price) as valor " +
+                    "FROM order_items oi " +
+                    "JOIN orders o ON oi.order_id = o.id " +
+                    "JOIN livros l ON oi.livro_id = l.id " +
+                    "JOIN categorias c ON l.categoria_id = c.id " +
+                    "WHERE o.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY) " +
+                    "AND o.status NOT IN ('cancelled', 'payment_failed') " +
+                    "GROUP BY c.id, c.nome " +
+                    "ORDER BY valor DESC";
+        
+        return executeQuery(sql, rs -> new Object[]{
+            rs.getString("nome"),
+            rs.getInt("quantidade"),
+            rs.getBigDecimal("valor")
+        }, dias);
+    }
+
+    /**
+     * Calcula vendas diárias em um período
+     */
+    public List<Object[]> calcularVendasDiarias(int dias) throws SQLException {
+        String sql = "SELECT DATE(o.created_at) as data, COUNT(*) as pedidos, SUM(o.total) as valor " +
+                    "FROM orders o " +
+                    "WHERE o.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY) " +
+                    "AND o.status NOT IN ('cancelled', 'payment_failed') " +
+                    "GROUP BY DATE(o.created_at) " +
+                    "ORDER BY data DESC";
+        
+        return executeQuery(sql, rs -> new Object[]{
+            rs.getDate("data"),
+            rs.getInt("pedidos"),
+            rs.getBigDecimal("valor")
+        }, dias);
+    }
+
+    /**
+     * Busca pedidos por método de pagamento
+     */
+    public List<Object[]> estatisticasPorMetodoPagamento(int dias) throws SQLException {
+        String sql = "SELECT payment_method, COUNT(*) as quantidade, SUM(total) as valor " +
+                    "FROM orders " +
+                    "WHERE created_at >= DATE_SUB(NOW(), INTERVAL ? DAY) " +
+                    "AND status NOT IN ('cancelled', 'payment_failed') " +
+                    "GROUP BY payment_method " +
+                    "ORDER BY quantidade DESC";
+        
+        return executeQuery(sql, rs -> new Object[]{
+            rs.getString("payment_method"),
+            rs.getInt("quantidade"),
+            rs.getBigDecimal("valor")
+        }, dias);
+    }
+
+    // ========== MÉTODOS DE BUSCA COMPLETA ==========
+
+    /**
+     * Busca pedido completo com itens
+     */
+    public Order buscarPorIdCompleto(int orderId) throws SQLException {
+        Order order = buscarPorId(orderId);
+        if (order != null) {
+            List<OrderItem> itens = listarItensDoPedido(orderId);
+            // Nota: Order não tem setItems no modelo atual, mas poderia ser adicionado
+        }
+        return order;
+    }
+
+    // ========== MÉTODOS DE VALIDAÇÃO ==========
+
+    /**
+     * Verifica se pedido pode ser cancelado
+     */
+    public boolean podeCancelar(int orderId) throws SQLException {
+        String sql = "SELECT status FROM orders WHERE id = ?";
+        List<String> result = executeQuery(sql, rs -> rs.getString("status"), orderId);
+        
+        if (result.isEmpty()) return false;
+        
+        String status = result.get(0);
+        return Order.STATUS_PENDING_PAYMENT.equals(status) ||
+               Order.STATUS_CONFIRMED.equals(status) ||
+               Order.STATUS_PROCESSING.equals(status);
+    }
+
+    /**
+     * Verifica se pedido pode ser enviado
+     */
+    public boolean podeEnviar(int orderId) throws SQLException {
+        String sql = "SELECT status FROM orders WHERE id = ?";
+        List<String> result = executeQuery(sql, rs -> rs.getString("status"), orderId);
+        
+        if (result.isEmpty()) return false;
+        
+        String status = result.get(0);
+        return Order.STATUS_CONFIRMED.equals(status) ||
+               Order.STATUS_PROCESSING.equals(status);
+    }
+
+    // ========== MÉTODOS DE ESTOQUE ==========
+
+    /**
+     * Devolve estoque dos itens do pedido (para cancelamentos)
+     */
+    public void devolverEstoque(int orderId) throws SQLException {
+        String sql = "UPDATE livros l " +
+                    "JOIN order_items oi ON l.id = oi.livro_id " +
+                    "SET l.estoque = l.estoque + oi.quantity " +
+                    "WHERE oi.order_id = ?";
+        
+        executeUpdate(sql, orderId);
+    }
+
+    // ========== MÉTODOS DE MAPEAMENTO ==========
+
+    /**
+     * Mapeia ResultSet para Order
+     */
+    private Order mapRowToOrder(ResultSet rs) throws SQLException {
+        Order order = new Order();
+        order.setId(rs.getInt("id"));
+        order.setOrderNumber(rs.getString("order_number"));
+        order.setUserId(rs.getInt("user_id"));
+        order.setCartId((Integer) rs.getObject("cart_id"));
+        order.setCupomId((Integer) rs.getObject("cupom_id"));
+        order.setSubtotal(rs.getBigDecimal("subtotal"));
+        order.setDesconto(rs.getBigDecimal("desconto"));
+        order.setShippingCost(rs.getBigDecimal("shipping_cost"));
+        order.setTotal(rs.getBigDecimal("total"));
+        order.setPaymentMethod(rs.getString("payment_method"));
+        order.setStatus(rs.getString("status"));
+        order.setNotes(rs.getString("notes"));
+        order.setObservacoes(rs.getString("observacoes"));
+        order.setTrackingCode(rs.getString("tracking_code"));
+        
+        // Dados de endereço
+        order.setShippingRecipientName(rs.getString("shipping_recipient_name"));
+        order.setShippingStreet(rs.getString("shipping_street"));
+        order.setShippingNumber(rs.getString("shipping_number"));
+        order.setShippingComplement(rs.getString("shipping_complement"));
+        order.setShippingNeighborhood(rs.getString("shipping_neighborhood"));
+        order.setShippingCity(rs.getString("shipping_city"));
+        order.setShippingState(rs.getString("shipping_state"));
+        order.setShippingPostalCode(rs.getString("shipping_postal_code"));
+        order.setShippingReference(rs.getString("shipping_reference"));
+        
+        // Datas
+        order.setShippedAt(toLocalDateTime(rs.getTimestamp("shipped_at")));
+        order.setDeliveredAt(toLocalDateTime(rs.getTimestamp("delivered_at")));
+        order.setCreatedAt(toLocalDateTime(rs.getTimestamp("created_at")));
+        order.setUpdatedAt(toLocalDateTime(rs.getTimestamp("updated_at")));
+        
+        return order;
+    }
+
+    /**
+     * Mapeia ResultSet para Order com dados do usuário
+     */
+    private Order mapRowToOrderWithUser(ResultSet rs) throws SQLException {
+        Order order = mapRowToOrder(rs);
+        
+        // Adicionar dados do usuário se disponíveis
+        try {
+            if (hasColumn(rs, "user_name")) {
+                User user = new User();
+                user.setId(order.getUserId());
+                user.setName(rs.getString("user_name"));
+                order.setUser(user);
+            }
+        } catch (SQLException e) {
+            // Dados do usuário podem não estar disponíveis
+        }
+        
+        return order;
+    }
+
+    /**
+     * Mapeia ResultSet para OrderItem
+     */
+    private OrderItem mapRowToOrderItem(ResultSet rs) throws SQLException {
+        OrderItem item = new OrderItem();
+        item.setId(rs.getInt("id"));
+        item.setOrderId(rs.getInt("order_id"));
+        item.setLivroId(rs.getInt("livro_id"));
+        item.setQuantity(rs.getInt("quantity"));
+        item.setUnitPrice(rs.getBigDecimal("unit_price"));
+        item.setTotalPrice(rs.getBigDecimal("total_price"));
+        item.setCreatedAt(toLocalDateTime(rs.getTimestamp("created_at")));
+        
+        return item;
+    }
+
+    /**
+     * Mapeia ResultSet para OrderItem com dados do livro
+     */
+    private OrderItem mapRowToOrderItemComLivro(ResultSet rs) throws SQLException {
+        OrderItem item = mapRowToOrderItem(rs);
+        
+        // Dados básicos do livro
+        try {
+            if (hasColumn(rs, "titulo")) {
+                Livro livro = new Livro();
+                livro.setId(item.getLivroId());
+                livro.setTitulo(rs.getString("titulo"));
+                livro.setAutor(rs.getString("autor"));
+                livro.setImagem(rs.getString("imagem"));
+                item.setLivro(livro);
+            }
+        } catch (SQLException e) {
+            // Dados do livro podem não estar disponíveis
+        }
+        
+        return item;
+    }
+
+    // ========== MÉTODOS ABSTRATOS DA BASEDAO ==========
+
+    @Override
+    public List<Order> findAll() {
+        try {
+            String sql = "SELECT * FROM orders ORDER BY created_at DESC";
+            return executeQuery(sql, this::mapRowToOrder);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Order findById(Long id) {
+        try {
+            return buscarPorId(id.intValue());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Order save(Order entity) {
+        throw new UnsupportedOperationException("Use criar(Connection, Order) para transações");
+    }
+
+    @Override
+    public Order update(Order entity) {
+        try {
+            atualizar(entity);
+            return entity;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean delete(Long id) {
+        try {
+            String sql = "DELETE FROM orders WHERE id = ?";
+            return executeUpdate(sql, id) > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
