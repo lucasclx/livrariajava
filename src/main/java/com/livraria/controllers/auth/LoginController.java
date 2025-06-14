@@ -49,7 +49,7 @@ public class LoginController extends BaseController {
             String email = getRequiredParameter(request, "email");
             String password = getRequiredParameter(request, "password");
             String redirectUrl = request.getParameter("redirect");
-            boolean remember = getBooleanParameter(request, "remember", false);
+            boolean remember = "true".equals(request.getParameter("remember"));
             
             // Validações básicas
             if (!ValidationUtil.isValidEmail(email)) {
