@@ -319,7 +319,7 @@ public class CartController extends BaseController {
             sendJsonSuccess(response, count);
             
         } catch (Exception e) {
-            sendJsonError(response, "Erro ao obter contador do carrinho");
+        	sendJsonError(response, "Erro ao obter contador do carrinho", 500);
         }
     }
     

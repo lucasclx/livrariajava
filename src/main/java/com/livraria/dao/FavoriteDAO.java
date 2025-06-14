@@ -85,10 +85,10 @@ public class FavoriteDAO extends BaseDAO<Livro> {
                     "JOIN livros l ON f.livro_id = l.id " +
                     "LEFT JOIN categorias c ON l.categoria_id = c.id " +
                     "WHERE f.user_id = ? AND l.ativo = true " +
-                    "ORDER BY f.created_at DESC" +
+                    "ORDER BY f.created_at DESC " +
                     buildLimitClause(page, pageSize);
         
-        return executeQuery(sql, this::mapRowToLivroComCategoria, userId, limit);
+        return executeQuery(sql, this::mapRowToLivroComCategoria, userId);
     }
     
     /**
@@ -117,56 +117,6 @@ public class FavoriteDAO extends BaseDAO<Livro> {
                     "JOIN livros l ON f.livro_id = l.id " +
                     "WHERE l.ativo = false";
         return executeUpdate(sql);
-    }
-    
-    /**
-     * Mapeia ResultSet para Livro
-     */
-    private Livro mapRowToLivro(java.sql.ResultSet rs) throws SQLException {
-        Livro livro = new Livro();
-        livro.setId(rs.getInt("id"));
-        livro.setTitulo(rs.getString("titulo"));
-        livro.setAutor(rs.getString("autor"));
-        livro.setIsbn(rs.getString("isbn"));
-        livro.setEditora(rs.getString("editora"));
-        livro.setAnoPublicacao((Integer) rs.getObject("ano_publicacao"));
-        livro.setPreco(rs.getBigDecimal("preco"));
-        livro.setPrecoPromocional(rs.getBigDecimal("preco_promocional"));
-        livro.setPaginas((Integer) rs.getObject("paginas"));
-        livro.setSinopse(rs.getString("sinopse"));
-        livro.setCategoriaId((Integer) rs.getObject("categoria_id"));
-        livro.setEstoque(rs.getInt("estoque"));
-        livro.setImagem(rs.getString("imagem"));
-        livro.setAtivo(rs.getBoolean("ativo"));
-        livro.setDestaque(rs.getBoolean("destaque"));
-        livro.setVendasTotal((Integer) rs.getObject("vendas_total"));
-        livro.setCreatedAt(toLocalDateTime(rs.getTimestamp("created_at")));
-        livro.setUpdatedAt(toLocalDateTime(rs.getTimestamp("updated_at")));
-        
-        return livro;
-    }
-    
-    /**
-     * Mapeia ResultSet para Livro com categoria
-     */
-    private Livro mapRowToLivroComCategoria(java.sql.ResultSet rs) throws SQLException {
-        Livro livro = mapRowToLivro(rs);
-        
-        try {
-            String categoriaNome = rs.getString("categoria_nome");
-            if (categoriaNome != null) {
-                com.livraria.models.Categoria categoria = new com.livraria.models.Categoria();
-                categoria.setId(livro.getCategoriaId());
-                categoria.setNome(categoriaNome);
-                livro.setCategoria(categoria);
-            }
-        } catch (SQLException e) {
-            // Campo categoria pode não estar disponível
-        }
-        
-        return livro;
-    }
-}mapRowToLivroComCategoria, userId);
     }
     
     /**
@@ -272,4 +222,54 @@ public class FavoriteDAO extends BaseDAO<Livro> {
                     "ORDER BY f.created_at DESC " +
                     "LIMIT ?";
         
-        return executeQuery(sql, this::
+        return executeQuery(sql, this::mapRowToLivroComCategoria, userId, limit);
+    }
+    
+    /**
+     * Mapeia ResultSet para Livro
+     */
+    private Livro mapRowToLivro(java.sql.ResultSet rs) throws SQLException {
+        Livro livro = new Livro();
+        livro.setId(rs.getInt("id"));
+        livro.setTitulo(rs.getString("titulo"));
+        livro.setAutor(rs.getString("autor"));
+        livro.setIsbn(rs.getString("isbn"));
+        livro.setEditora(rs.getString("editora"));
+        livro.setAnoPublicacao((Integer) rs.getObject("ano_publicacao"));
+        livro.setPreco(rs.getBigDecimal("preco"));
+        livro.setPrecoPromocional(rs.getBigDecimal("preco_promocional"));
+        livro.setPaginas((Integer) rs.getObject("paginas"));
+        livro.setSinopse(rs.getString("sinopse"));
+        livro.setCategoriaId((Integer) rs.getObject("categoria_id"));
+        livro.setEstoque(rs.getInt("estoque"));
+        livro.setImagem(rs.getString("imagem"));
+        livro.setAtivo(rs.getBoolean("ativo"));
+        livro.setDestaque(rs.getBoolean("destaque"));
+        livro.setVendasTotal((Integer) rs.getObject("vendas_total"));
+        livro.setCreatedAt(toLocalDateTime(rs.getTimestamp("created_at")));
+        livro.setUpdatedAt(toLocalDateTime(rs.getTimestamp("updated_at")));
+        
+        return livro;
+    }
+    
+    /**
+     * Mapeia ResultSet para Livro com categoria
+     */
+    private Livro mapRowToLivroComCategoria(java.sql.ResultSet rs) throws SQLException {
+        Livro livro = mapRowToLivro(rs);
+        
+        try {
+            String categoriaNome = rs.getString("categoria_nome");
+            if (categoriaNome != null) {
+                com.livraria.models.Categoria categoria = new com.livraria.models.Categoria();
+                categoria.setId(livro.getCategoriaId());
+                categoria.setNome(categoriaNome);
+                livro.setCategoria(categoria);
+            }
+        } catch (SQLException e) {
+            // Campo categoria pode não estar disponível
+        }
+        
+        return livro;
+    }
+}

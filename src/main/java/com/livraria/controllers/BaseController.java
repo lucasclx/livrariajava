@@ -49,70 +49,75 @@ public abstract class BaseController extends HttpServlet {
      * Redireciona com mensagem de sucesso
      */
     protected void redirectWithSuccess(HttpServletResponse response, String url, String message) throws IOException {
-        response.sendRedirect(url + "?success=" + java.net.URLEncoder.encode(message, "UTF-8"));
+        HttpSession session = (HttpSession) request.getAttribute("session");
+        if (session != null) {
+             session.setAttribute("success", message);
+        }
+        response.sendRedirect(url);
     }
     
     /**
      * Redireciona com mensagem de erro
      */
     protected void redirectWithError(HttpServletResponse response, String url, String message) throws IOException {
-        response.sendRedirect(url + "?error=" + java.net.URLEncoder.encode(message, "UTF-8"));
+        HttpSession session = (HttpSession) request.getAttribute("session");
+        if (session != null) {
+            session.setAttribute("error", message);
+        }
+        response.sendRedirect(url);
     }
     
     /**
-     * Retorna resposta JSON de sucesso
+     * Retorna resposta JSON
+     */
+    protected void sendJson(HttpServletResponse response, int statusCode, Object data) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(statusCode);
+        PrintWriter out = response.getWriter();
+        out.print(gson.toJson(data));
+        out.flush();
+    }
+
+    /**
+     * Retorna resposta JSON de sucesso (status 200)
      */
     protected void sendJsonSuccess(HttpServletResponse response, Object data) throws IOException {
-        response.setContentType("application/json;charset=UTF-8");
-        PrintWriter out = response.getWriter();
-        
-        JsonResponse jsonResponse = new JsonResponse(true, "Operação realizada com sucesso", data);
-        out.print(gson.toJson(jsonResponse));
-        out.flush();
+        sendJson(response, HttpServletResponse.SC_OK, new JsonResponse(true, "Operação realizada com sucesso", data));
     }
     
     /**
-     * Retorna resposta JSON de erro
+     * Retorna resposta JSON de erro com status customizado
      */
-    protected void sendJsonError(HttpServletResponse response, String message) throws IOException {
-        response.setContentType("application/json;charset=UTF-8");
-        PrintWriter out = response.getWriter();
-        
-        JsonResponse jsonResponse = new JsonResponse(false, message, null);
-        out.print(gson.toJson(jsonResponse));
-        out.flush();
+    protected void sendJsonError(HttpServletResponse response, String message, int statusCode) throws IOException {
+        sendJson(response, statusCode, new JsonResponse(false, message, null));
     }
     
     /**
-     * Verifica acesso de administrador
+     * Verifica acesso de administrador e redireciona ou retorna erro
      */
     protected void checkAdminAccess(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        if (!isAuthenticated(request)) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-        
         if (!isAdmin(request)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, 
-                "Acesso negado. Apenas administradores podem acessar esta área.");
-            return;
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Acesso negado.");
         }
     }
     
     /**
-     * Verifica autenticação
+     * Verifica autenticação e redireciona se não estiver logado
      */
     protected void checkAuthentication(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException {
+            throws IOException {
         if (!isAuthenticated(request)) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
+            String redirectUrl = request.getRequestURI();
+            if (request.getQueryString() != null) {
+                redirectUrl += "?" + request.getQueryString();
+            }
+            redirectWithError(response, request.getContextPath() + "/login", "Você precisa fazer login para acessar esta página.");
         }
     }
     
     /**
-     * Obtém parâmetro obrigatório
+     * Obtém parâmetro obrigatório da requisição
      */
     protected String getRequiredParameter(HttpServletRequest request, String paramName) 
             throws ServletException {
@@ -124,9 +129,9 @@ public abstract class BaseController extends HttpServlet {
     }
     
     /**
-     * Obtém parâmetro inteiro
+     * Obtém parâmetro inteiro da requisição
      */
-    protected Integer getIntParameter(HttpServletRequest request, String paramName, Integer defaultValue) {
+    protected int getIntParameter(HttpServletRequest request, String paramName, int defaultValue) {
         String value = request.getParameter(paramName);
         if (value == null || value.trim().isEmpty()) {
             return defaultValue;
@@ -139,48 +144,17 @@ public abstract class BaseController extends HttpServlet {
     }
     
     /**
-     * Obtém parâmetro decimal
-     */
-    protected Double getDoubleParameter(HttpServletRequest request, String paramName, Double defaultValue) {
-        String value = request.getParameter(paramName);
-        if (value == null || value.trim().isEmpty()) {
-            return defaultValue;
-        }
-        try {
-            return Double.parseDouble(value.trim().replace(",", "."));
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
-    }
-    
-    /**
-     * Obtém parâmetro boolean
-     */
-    protected Boolean getBooleanParameter(HttpServletRequest request, String paramName, Boolean defaultValue) {
-        String value = request.getParameter(paramName);
-        if (value == null) {
-            return defaultValue;
-        }
-        return "true".equals(value) || "on".equals(value) || "1".equals(value);
-    }
-    
-    /**
      * Classe para respostas JSON padronizadas
      */
     public static class JsonResponse {
-        private boolean success;
-        private String message;
-        private Object data;
+        private final boolean success;
+        private final String message;
+        private final Object data;
         
         public JsonResponse(boolean success, String message, Object data) {
             this.success = success;
             this.message = message;
             this.data = data;
         }
-        
-        // Getters
-        public boolean isSuccess() { return success; }
-        public String getMessage() { return message; }
-        public Object getData() { return data; }
     }
 }

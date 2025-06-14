@@ -136,7 +136,7 @@ public class RegisterController extends BaseController {
             newUser.setCpf(cpf != null && !cpf.trim().isEmpty() ? cpf.trim() : null);
             newUser.setDataNascimento(dataNascimento);
             newUser.setGenero(genero);
-            newUser.setAdmin(false);
+            newUser.setIsAdmin(false);  // Corrigido: setIsAdmin ao invés de setAdmin
             newUser.setAtivo(true);
             
             // Salvar no banco

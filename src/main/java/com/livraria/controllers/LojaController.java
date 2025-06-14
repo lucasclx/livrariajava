@@ -23,7 +23,7 @@ public class LojaController extends BaseController {
     private FavoriteDAO favoriteDAO;
     
     @Override
-    public void init() throws ServletException {
+    public void init() {
         livroDAO = new LivroDAO();
         categoriaDAO = new CategoriaDAO();
         favoriteDAO = new FavoriteDAO();

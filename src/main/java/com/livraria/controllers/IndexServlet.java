@@ -8,20 +8,36 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Servlet para redirecionar a página inicial
+ * Servlet de página inicial que redireciona para index.jsp
  */
-
-@WebServlet(name = "IndexServlet", urlPatterns = {"", "/"})
+@WebServlet(urlPatterns = {"/", "/index"})
 public class IndexServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
     
+    /**
+     * Construtor padrão
+     */
+    public IndexServlet() {
+        super();
+    }
+    
+    /**
+     * Handles GET requests - encaminha para index.jsp
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        // Redirecionar para a loja
-        response.sendRedirect(request.getContextPath() + "/loja/");
+        // Log para debug
+        System.out.println("[IndexServlet] Redirecionando para index.jsp");
+        
+        // Encaminhar para a página index.jsp
+        request.getRequestDispatcher("/index.jsp").forward(request, response);
     }
     
+    /**
+     * Handles POST requests - redireciona para GET
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
