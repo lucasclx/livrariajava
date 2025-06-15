@@ -8,15 +8,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import com.google.gson.Gson;
 import com.livraria.models.User;
+import com.livraria.utils.JsonUtil;
 
 /**
- * Controlador base com funcionalidades comuns
+ * Controlador base com funcionalidades comuns - VERSÃO CORRIGIDA
  */
 public abstract class BaseController extends HttpServlet {
-    
-    protected Gson gson = new Gson();
     
     /**
      * Verifica se o usuário está autenticado
@@ -46,7 +44,7 @@ public abstract class BaseController extends HttpServlet {
     }
     
     /**
-     * Redireciona com mensagem de sucesso
+     * Redireciona com mensagem de sucesso - CORRIGIDO
      */
     protected void redirectWithSuccess(HttpServletResponse response, HttpServletRequest request, String url, String message) throws IOException {
         HttpSession session = request.getSession();
@@ -55,7 +53,7 @@ public abstract class BaseController extends HttpServlet {
     }
     
     /**
-     * Redireciona com mensagem de erro
+     * Redireciona com mensagem de erro - CORRIGIDO
      */
     protected void redirectWithError(HttpServletResponse response, HttpServletRequest request, String url, String message) throws IOException {
         HttpSession session = request.getSession();
@@ -66,11 +64,11 @@ public abstract class BaseController extends HttpServlet {
     /**
      * Retorna resposta JSON
      */
-    protected void sendJson(HttpServletResponse response, int statusCode, Object data) throws IOException {
+    protected void sendJson(HttpServletResponse response, int statusCode, String jsonString) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(statusCode);
         PrintWriter out = response.getWriter();
-        out.print(gson.toJson(data));
+        out.print(jsonString);
         out.flush();
     }
 
@@ -78,14 +76,23 @@ public abstract class BaseController extends HttpServlet {
      * Retorna resposta JSON de sucesso (status 200)
      */
     protected void sendJsonSuccess(HttpServletResponse response, Object data) throws IOException {
-        sendJson(response, HttpServletResponse.SC_OK, new JsonResponse(true, "Operação realizada com sucesso", data));
+        String json = JsonUtil.createSuccessResponse("Operação realizada com sucesso", data);
+        sendJson(response, HttpServletResponse.SC_OK, json);
     }
     
     /**
      * Retorna resposta JSON de erro com status customizado
      */
     protected void sendJsonError(HttpServletResponse response, String message, int statusCode) throws IOException {
-        sendJson(response, statusCode, new JsonResponse(false, message, null));
+        String json = JsonUtil.createErrorResponse(message);
+        sendJson(response, statusCode, json);
+    }
+    
+    /**
+     * Sobrecarga para compatibilidade - método com apenas 2 parâmetros
+     */
+    protected void sendJsonError(HttpServletResponse response, String message) throws IOException {
+        sendJsonError(response, message, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
     
     /**
@@ -162,21 +169,6 @@ public abstract class BaseController extends HttpServlet {
             return Double.parseDouble(value.trim().replace(',', '.'));
         } catch (NumberFormatException e) {
             return defaultValue;
-        }
-    }
-    
-    /**
-     * Classe para respostas JSON padronizadas
-     */
-    public static class JsonResponse {
-        private final boolean success;
-        private final String message;
-        private final Object data;
-        
-        public JsonResponse(boolean success, String message, Object data) {
-            this.success = success;
-            this.message = message;
-            this.data = data;
         }
     }
 }

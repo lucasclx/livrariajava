@@ -13,7 +13,6 @@ import com.livraria.models.User;
 import com.livraria.utils.PasswordUtil;
 import com.livraria.utils.ValidationUtil;
 
-@WebServlet("/login")
 public class LoginController extends BaseController {
     
     private UserDAO userDAO;

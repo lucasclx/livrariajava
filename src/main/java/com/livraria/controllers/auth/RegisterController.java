@@ -14,7 +14,6 @@ import com.livraria.models.User;
 import com.livraria.utils.PasswordUtil;
 import com.livraria.utils.ValidationUtil;
 
-@WebServlet("/register")
 public class RegisterController extends BaseController {
     
     private UserDAO userDAO;

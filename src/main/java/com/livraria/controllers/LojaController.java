@@ -15,7 +15,6 @@ import com.livraria.models.Livro;
 import com.livraria.models.Categoria;
 import com.livraria.models.User;
 
-@WebServlet(name = "LojaController", urlPatterns = {"/loja/*"})
 public class LojaController extends BaseController {
     
     private LivroDAO livroDAO;

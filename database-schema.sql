@@ -1,64 +1,103 @@
--- Script de criação do banco de dados para Livraria Java
--- Execute este script no seu MySQL para criar as tabelas necessárias
+-- Script de criação do banco de dados da Livraria
+-- Execute este script no MySQL para criar todas as tabelas
 
-CREATE DATABASE IF NOT EXISTS livraria_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Criar banco de dados se não existir
+CREATE DATABASE IF NOT EXISTS livraria_db 
+CHARACTER SET utf8mb4 
+COLLATE utf8mb4_unicode_ci;
+
 USE livraria_db;
 
--- Tabela de usuários
+-- ========================================
+-- TABELA DE USUÁRIOS
+-- ========================================
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    password VARCHAR(500) NOT NULL,
     telefone VARCHAR(20),
     cpf VARCHAR(14),
     data_nascimento DATE,
-    genero ENUM('masculino', 'feminino', 'outro'),
+    genero ENUM('M', 'F', 'Outro'),
     is_admin BOOLEAN DEFAULT FALSE,
     ativo BOOLEAN DEFAULT TRUE,
     email_verified_at TIMESTAMP NULL,
     last_login_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
     INDEX idx_email (email),
-    INDEX idx_ativo (ativo)
+    INDEX idx_ativo (ativo),
+    INDEX idx_admin (is_admin)
 );
 
--- Tabela de categorias
+-- ========================================
+-- TABELA DE ENDEREÇOS DE USUÁRIOS
+-- ========================================
+CREATE TABLE user_addresses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    label VARCHAR(100),
+    recipient_name VARCHAR(255) NOT NULL,
+    street VARCHAR(255) NOT NULL,
+    number VARCHAR(20) NOT NULL,
+    complement VARCHAR(255),
+    neighborhood VARCHAR(100) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    state CHAR(2) NOT NULL,
+    postal_code CHAR(8) NOT NULL,
+    reference VARCHAR(255),
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_default (is_default)
+);
+
+-- ========================================
+-- TABELA DE CATEGORIAS
+-- ========================================
 CREATE TABLE categorias (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
+    nome VARCHAR(100) NOT NULL UNIQUE,
     descricao TEXT,
-    slug VARCHAR(120) UNIQUE,
+    slug VARCHAR(120) NOT NULL UNIQUE,
     imagem VARCHAR(255),
     ativo BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
     INDEX idx_slug (slug),
-    INDEX idx_ativo (ativo)
+    INDEX idx_ativo (ativo),
+    INDEX idx_nome (nome)
 );
 
--- Tabela de livros
+-- ========================================
+-- TABELA DE LIVROS
+-- ========================================
 CREATE TABLE livros (
     id INT AUTO_INCREMENT PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
     autor VARCHAR(255) NOT NULL,
     isbn VARCHAR(20),
-    editora VARCHAR(100),
-    ano_publicacao INT,
+    editora VARCHAR(255),
+    ano_publicacao YEAR,
     preco DECIMAL(10,2) NOT NULL,
     preco_promocional DECIMAL(10,2),
     paginas INT,
     sinopse TEXT,
     sumario TEXT,
     categoria_id INT,
-    estoque INT DEFAULT 0,
+    estoque INT NOT NULL DEFAULT 0,
     estoque_minimo INT DEFAULT 5,
-    peso DECIMAL(5,2) DEFAULT 0.5,
+    peso DECIMAL(5,2) DEFAULT 0.50,
     dimensoes VARCHAR(50),
-    idioma VARCHAR(30) DEFAULT 'Português',
+    idioma VARCHAR(50) DEFAULT 'Português',
     edicao VARCHAR(50),
-    encadernacao VARCHAR(30),
+    encadernacao VARCHAR(50),
     imagem VARCHAR(255),
     galeria_imagens TEXT,
     ativo BOOLEAN DEFAULT TRUE,
@@ -70,52 +109,39 @@ CREATE TABLE livros (
     promocao_fim TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
     FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE SET NULL,
-    INDEX idx_titulo (titulo),
-    INDEX idx_autor (autor),
     INDEX idx_categoria (categoria_id),
     INDEX idx_ativo (ativo),
     INDEX idx_destaque (destaque),
     INDEX idx_preco (preco),
-    INDEX idx_estoque (estoque)
+    INDEX idx_estoque (estoque),
+    INDEX idx_titulo (titulo),
+    INDEX idx_autor (autor),
+    INDEX idx_isbn (isbn),
+    FULLTEXT idx_busca (titulo, autor, editora)
 );
 
--- Tabela de endereços dos usuários
-CREATE TABLE user_addresses (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    label VARCHAR(50),
-    recipient_name VARCHAR(255),
-    street VARCHAR(255) NOT NULL,
-    number VARCHAR(20) NOT NULL,
-    complement VARCHAR(100),
-    neighborhood VARCHAR(100) NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    state VARCHAR(2) NOT NULL,
-    postal_code VARCHAR(10) NOT NULL,
-    reference VARCHAR(255),
-    is_default BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_user_id (user_id)
-);
-
--- Tabela de carrinhos
+-- ========================================
+-- TABELA DE CARRINHOS
+-- ========================================
 CREATE TABLE carts (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    session_id VARCHAR(100),
+    session_id VARCHAR(255),
     user_id INT,
-    status VARCHAR(20) DEFAULT 'active',
+    status ENUM('active', 'completed', 'cancelled') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
     INDEX idx_session_id (session_id),
     INDEX idx_user_id (user_id),
     INDEX idx_status (status)
 );
 
--- Tabela de itens do carrinho
+-- ========================================
+-- TABELA DE ITENS DO CARRINHO
+-- ========================================
 CREATE TABLE cart_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     cart_id INT NOT NULL,
@@ -125,13 +151,17 @@ CREATE TABLE cart_items (
     stock_reserved BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
     FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE CASCADE,
     FOREIGN KEY (livro_id) REFERENCES livros(id) ON DELETE CASCADE,
     INDEX idx_cart_id (cart_id),
-    INDEX idx_livro_id (livro_id)
+    INDEX idx_livro_id (livro_id),
+    UNIQUE KEY unique_cart_livro (cart_id, livro_id)
 );
 
--- Tabela de cupons
+-- ========================================
+-- TABELA DE CUPONS
+-- ========================================
 CREATE TABLE cupons (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(50) NOT NULL UNIQUE,
@@ -147,51 +177,61 @@ CREATE TABLE cupons (
     ativo BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
     INDEX idx_codigo (codigo),
-    INDEX idx_ativo (ativo)
+    INDEX idx_ativo (ativo),
+    INDEX idx_validade (valido_de, valido_ate)
 );
 
--- Tabela de pedidos
+-- ========================================
+-- TABELA DE PEDIDOS
+-- ========================================
 CREATE TABLE orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_number VARCHAR(50) NOT NULL UNIQUE,
-    cart_id INT,
     user_id INT NOT NULL,
+    cart_id INT,
     cupom_id INT,
     subtotal DECIMAL(10,2) NOT NULL,
     desconto DECIMAL(10,2) DEFAULT 0.00,
-    shipping_cost DECIMAL(10,2) DEFAULT 0.00,
+    shipping_cost DECIMAL(10,2) NOT NULL,
     total DECIMAL(10,2) NOT NULL,
-    payment_method VARCHAR(50),
-    status VARCHAR(30) DEFAULT 'pending_payment',
+    payment_method VARCHAR(50) NOT NULL,
+    status ENUM('pending_payment', 'confirmed', 'payment_failed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded') DEFAULT 'pending_payment',
     notes TEXT,
     observacoes TEXT,
     tracking_code VARCHAR(100),
-    shipped_at TIMESTAMP NULL,
-    delivered_at TIMESTAMP NULL,
     
-    -- Endereço de entrega
-    shipping_recipient_name VARCHAR(255),
-    shipping_street VARCHAR(255),
-    shipping_number VARCHAR(20),
-    shipping_complement VARCHAR(100),
-    shipping_neighborhood VARCHAR(100),
-    shipping_city VARCHAR(100),
-    shipping_state VARCHAR(2),
-    shipping_postal_code VARCHAR(10),
+    -- Dados do endereço de entrega
+    shipping_recipient_name VARCHAR(255) NOT NULL,
+    shipping_street VARCHAR(255) NOT NULL,
+    shipping_number VARCHAR(20) NOT NULL,
+    shipping_complement VARCHAR(255),
+    shipping_neighborhood VARCHAR(100) NOT NULL,
+    shipping_city VARCHAR(100) NOT NULL,
+    shipping_state CHAR(2) NOT NULL,
+    shipping_postal_code CHAR(8) NOT NULL,
     shipping_reference VARCHAR(255),
     
+    shipped_at TIMESTAMP NULL,
+    delivered_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
     FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE SET NULL,
     FOREIGN KEY (cupom_id) REFERENCES cupons(id) ON DELETE SET NULL,
+    
     INDEX idx_order_number (order_number),
     INDEX idx_user_id (user_id),
-    INDEX idx_status (status)
+    INDEX idx_status (status),
+    INDEX idx_payment_method (payment_method),
+    INDEX idx_created_at (created_at)
 );
 
--- Tabela de itens do pedido
+-- ========================================
+-- TABELA DE ITENS DO PEDIDO
+-- ========================================
 CREATE TABLE order_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
@@ -200,31 +240,39 @@ CREATE TABLE order_items (
     unit_price DECIMAL(10,2) NOT NULL,
     total_price DECIMAL(10,2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     FOREIGN KEY (livro_id) REFERENCES livros(id) ON DELETE RESTRICT,
+    
     INDEX idx_order_id (order_id),
     INDEX idx_livro_id (livro_id)
 );
 
--- Tabela de favoritos
+-- ========================================
+-- TABELA DE FAVORITOS
+-- ========================================
 CREATE TABLE favoritos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     livro_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (livro_id) REFERENCES livros(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_favorite (user_id, livro_id),
+    
+    UNIQUE KEY unique_user_livro (user_id, livro_id),
     INDEX idx_user_id (user_id),
     INDEX idx_livro_id (livro_id)
 );
 
--- Tabela de avaliações
+-- ========================================
+-- TABELA DE AVALIAÇÕES
+-- ========================================
 CREATE TABLE avaliacoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     livro_id INT NOT NULL,
     user_id INT NOT NULL,
-    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    rating INT CHECK (rating >= 1 AND rating <= 5),
     titulo VARCHAR(255),
     comentario TEXT,
     aprovado BOOLEAN DEFAULT FALSE,
@@ -233,38 +281,215 @@ CREATE TABLE avaliacoes (
     desvantagens TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
     FOREIGN KEY (livro_id) REFERENCES livros(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_user_review (livro_id, user_id),
+    
+    UNIQUE KEY unique_user_livro_review (user_id, livro_id),
     INDEX idx_livro_id (livro_id),
     INDEX idx_user_id (user_id),
-    INDEX idx_aprovado (aprovado)
+    INDEX idx_aprovado (aprovado),
+    INDEX idx_rating (rating)
 );
 
--- Inserir dados iniciais
+-- ========================================
+-- INSERÇÕES INICIAIS
+-- ========================================
 
--- Usuário administrador padrão
-INSERT INTO users (name, email, password, is_admin, ativo) 
-VALUES ('Administrador', 'admin@livraria.com', 'simple_hash_123456', TRUE, TRUE);
+-- Inserir usuário administrador padrão
+INSERT INTO users (name, email, password, is_admin, ativo) VALUES 
+('Administrador', 'admin@livraria.com', 'MTIzNDU2eGi3t6h4MzIxEiO4aOLKFZmNzY2ZjYwNjc=', TRUE, TRUE);
 
--- Categorias iniciais
+-- Inserir categorias iniciais
 INSERT INTO categorias (nome, descricao, slug, ativo) VALUES 
-('Ficção', 'Livros de ficção em geral', 'ficcao', TRUE),
-('Romance', 'Livros de romance', 'romance', TRUE),
-('Suspense', 'Livros de suspense e thriller', 'suspense', TRUE),
-('Fantasia', 'Livros de fantasia e ficção científica', 'fantasia', TRUE),
-('Biografias', 'Biografias e autobiografias', 'biografias', TRUE),
-('Tecnologia', 'Livros sobre tecnologia e programação', 'tecnologia', TRUE),
-('Negócios', 'Livros sobre negócios e empreendedorismo', 'negocios', TRUE),
-('Autoajuda', 'Livros de autoajuda e desenvolvimento pessoal', 'autoajuda', TRUE);
+('Ficção', 'Livros de ficção, romances e literatura em geral', 'ficcao', TRUE),
+('Não-Ficção', 'Livros técnicos, biografias, história e outros', 'nao-ficcao', TRUE),
+('Infantil', 'Livros infantis e juvenis', 'infantil', TRUE),
+('Técnico', 'Livros técnicos, programação, ciências', 'tecnico', TRUE),
+('Autoajuda', 'Livros de desenvolvimento pessoal e autoajuda', 'autoajuda', TRUE),
+('História', 'Livros de história e ciências humanas', 'historia', TRUE),
+('Ciências', 'Livros de ciências exatas e biológicas', 'ciencias', TRUE),
+('Arte', 'Livros de arte, design e cultura', 'arte', TRUE);
 
--- Livros de exemplo
-INSERT INTO livros (titulo, autor, isbn, editora, ano_publicacao, preco, categoria_id, estoque, sinopse, ativo, destaque) VALUES 
-('O Senhor dos Anéis', 'J.R.R. Tolkien', '9788533613379', 'Martins Fontes', 2000, 45.90, 4, 10, 'Uma épica jornada pela Terra Média.', TRUE, TRUE),
-('1984', 'George Orwell', '9788535914849', 'Companhia das Letras', 2009, 32.90, 1, 15, 'Um clássico da distopia moderna.', TRUE, TRUE),
-('O Código Limpo', 'Robert C. Martin', '9788576082675', 'Alta Books', 2012, 89.90, 6, 8, 'Habilidades práticas do Agile Software.', TRUE, FALSE),
-('Sapiens', 'Yuval Noah Harari', '9788525432228', 'L&PM', 2015, 54.90, 5, 12, 'Uma breve história da humanidade.', TRUE, TRUE);
+-- Inserir alguns livros de exemplo
+INSERT INTO livros (titulo, autor, preco, categoria_id, estoque, ativo, destaque) VALUES 
+('Dom Casmurro', 'Machado de Assis', 29.90, 1, 15, TRUE, TRUE),
+('O Cortiço', 'Aluísio Azevedo', 24.90, 1, 20, TRUE, FALSE),
+('Sapiens', 'Yuval Noah Harari', 49.90, 2, 10, TRUE, TRUE),
+('Clean Code', 'Robert C. Martin', 89.90, 4, 8, TRUE, TRUE),
+('O Pequeno Príncipe', 'Antoine de Saint-Exupéry', 19.90, 3, 25, TRUE, TRUE);
 
--- Cupom de teste
-INSERT INTO cupons (codigo, descricao, tipo, valor, ativo) 
-VALUES ('BEMVINDO10', 'Desconto de 10% para novos clientes', 'percentual', 10.00, TRUE);
+-- ========================================
+-- TRIGGERS PARA ATUALIZAÇÃO AUTOMÁTICA
+-- ========================================
+
+-- Trigger para atualizar vendas_total quando um pedido é confirmado
+DELIMITER $
+CREATE TRIGGER update_book_sales_after_order 
+AFTER UPDATE ON orders
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'confirmed' AND OLD.status != 'confirmed' THEN
+        UPDATE livros l
+        JOIN order_items oi ON l.id = oi.livro_id
+        SET l.vendas_total = l.vendas_total + oi.quantity
+        WHERE oi.order_id = NEW.id;
+    END IF;
+END$
+DELIMITER ;
+
+-- Trigger para atualizar avaliação média dos livros
+DELIMITER $
+CREATE TRIGGER update_book_rating_after_review 
+AFTER INSERT ON avaliacoes
+FOR EACH ROW
+BEGIN
+    UPDATE livros 
+    SET 
+        avaliacao_media = (
+            SELECT AVG(rating) 
+            FROM avaliacoes 
+            WHERE livro_id = NEW.livro_id AND aprovado = TRUE
+        ),
+        total_avaliacoes = (
+            SELECT COUNT(*) 
+            FROM avaliacoes 
+            WHERE livro_id = NEW.livro_id AND aprovado = TRUE
+        )
+    WHERE id = NEW.livro_id;
+END$
+DELIMITER ;
+
+-- Trigger para atualizar avaliação após aprovação
+DELIMITER $
+CREATE TRIGGER update_book_rating_after_approval 
+AFTER UPDATE ON avaliacoes
+FOR EACH ROW
+BEGIN
+    IF NEW.aprovado != OLD.aprovado THEN
+        UPDATE livros 
+        SET 
+            avaliacao_media = (
+                SELECT COALESCE(AVG(rating), 0) 
+                FROM avaliacoes 
+                WHERE livro_id = NEW.livro_id AND aprovado = TRUE
+            ),
+            total_avaliacoes = (
+                SELECT COUNT(*) 
+                FROM avaliacoes 
+                WHERE livro_id = NEW.livro_id AND aprovado = TRUE
+            )
+        WHERE id = NEW.livro_id;
+    END IF;
+END$
+DELIMITER ;
+
+-- ========================================
+-- VIEWS ÚTEIS
+-- ========================================
+
+-- View para livros com informações da categoria
+CREATE VIEW vw_livros_categoria AS
+SELECT 
+    l.*,
+    c.nome as categoria_nome,
+    c.slug as categoria_slug
+FROM livros l
+LEFT JOIN categorias c ON l.categoria_id = c.id;
+
+-- View para pedidos com informações do usuário
+CREATE VIEW vw_pedidos_usuario AS
+SELECT 
+    o.*,
+    u.name as user_name,
+    u.email as user_email
+FROM orders o
+JOIN users u ON o.user_id = u.id;
+
+-- View para estatísticas de vendas
+CREATE VIEW vw_estatisticas_vendas AS
+SELECT 
+    DATE(o.created_at) as data_venda,
+    COUNT(*) as total_pedidos,
+    SUM(o.total) as faturamento_dia,
+    AVG(o.total) as ticket_medio
+FROM orders o
+WHERE o.status IN ('confirmed', 'processing', 'shipped', 'delivered')
+GROUP BY DATE(o.created_at)
+ORDER BY data_venda DESC;
+
+-- ========================================
+-- PROCEDIMENTOS ARMAZENADOS
+-- ========================================
+
+-- Procedimento para limpar carrinhos abandonados
+DELIMITER $
+CREATE PROCEDURE LimparCarrinhosAbandonados(IN dias_inativo INT)
+BEGIN
+    DELETE FROM carts 
+    WHERE status = 'active' 
+    AND updated_at < DATE_SUB(NOW(), INTERVAL dias_inativo DAY);
+    
+    SELECT ROW_COUNT() as carrinhos_removidos;
+END$
+DELIMITER ;
+
+-- Procedimento para relatório de vendas por período
+DELIMITER $
+CREATE PROCEDURE RelatorioVendasPeriodo(
+    IN data_inicio DATE, 
+    IN data_fim DATE
+)
+BEGIN
+    SELECT 
+        DATE(o.created_at) as data_venda,
+        COUNT(*) as total_pedidos,
+        SUM(o.total) as faturamento,
+        AVG(o.total) as ticket_medio,
+        SUM(oi.quantity) as livros_vendidos
+    FROM orders o
+    JOIN order_items oi ON o.id = oi.order_id
+    WHERE DATE(o.created_at) BETWEEN data_inicio AND data_fim
+    AND o.status IN ('confirmed', 'processing', 'shipped', 'delivered')
+    GROUP BY DATE(o.created_at)
+    ORDER BY data_venda;
+END$
+DELIMITER ;
+
+-- ========================================
+-- ÍNDICES ADICIONAIS PARA PERFORMANCE
+-- ========================================
+
+-- Índices compostos para melhorar consultas
+CREATE INDEX idx_orders_user_status ON orders(user_id, status);
+CREATE INDEX idx_orders_date_status ON orders(created_at, status);
+CREATE INDEX idx_livros_categoria_ativo ON livros(categoria_id, ativo);
+CREATE INDEX idx_livros_preco_ativo ON livros(preco, ativo);
+CREATE INDEX idx_avaliacoes_livro_aprovado ON avaliacoes(livro_id, aprovado);
+
+-- ========================================
+-- COMENTÁRIOS FINAIS
+-- ========================================
+
+/*
+Este script cria um banco de dados completo para a livraria com:
+
+1. Estrutura de usuários e autenticação
+2. Sistema de produtos (livros) com categorias
+3. Carrinho de compras
+4. Sistema de pedidos completo
+5. Favoritos e avaliações
+6. Sistema de cupons de desconto
+7. Triggers para atualizações automáticas
+8. Views para consultas otimizadas
+9. Procedimentos para manutenção
+
+Para usar:
+1. Execute este script no MySQL
+2. Configure o context.xml com os dados de conexão
+3. Inicie a aplicação
+
+Usuário admin padrão:
+- Email: admin@livraria.com
+- Senha: 123456 (altere após o primeiro login)
+*/
