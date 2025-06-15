@@ -14,8 +14,8 @@ import com.livraria.models.Categoria;
 import com.livraria.utils.FileUploadUtil;
 import com.livraria.utils.SlugUtil;
 
-@MultipartConfig(maxFileSize = 2097152) // 2MB
 @WebServlet("/categorias/*")
+@MultipartConfig(maxFileSize = 2097152) // 2MB
 public class CategoriaController extends BaseController {
     
     private CategoriaDAO categoriaDAO;
@@ -117,14 +117,14 @@ public class CategoriaController extends BaseController {
             String nome = getRequiredParameter(request, "nome");
             
             if (nome.length() < 3 || nome.length() > 100) {
-                redirectWithError(response, request.getContextPath() + "/admin/categorias/create", 
+                redirectWithError(response, request, request.getContextPath() + "/admin/categorias/create", 
                     "Nome deve ter entre 3 e 100 caracteres");
                 return;
             }
             
             // Verificar se nome já existe
             if (categoriaDAO.existeNome(nome, null)) {
-                redirectWithError(response, request.getContextPath() + "/admin/categorias/create", 
+                redirectWithError(response, request, request.getContextPath() + "/admin/categorias/create", 
                     "Já existe uma categoria com este nome");
                 return;
             }
@@ -146,11 +146,11 @@ public class CategoriaController extends BaseController {
             // Salvar no banco
             categoriaDAO.criar(categoria);
             
-            redirectWithSuccess(response, request.getContextPath() + "/admin/categorias", 
+            redirectWithSuccess(response, request, request.getContextPath() + "/admin/categorias", 
                 "Categoria criada com sucesso!");
                 
         } catch (Exception e) {
-            redirectWithError(response, request.getContextPath() + "/admin/categorias/create", 
+            redirectWithError(response, request, request.getContextPath() + "/admin/categorias/create", 
                 "Erro ao criar categoria: " + e.getMessage());
         }
     }
@@ -187,14 +187,14 @@ public class CategoriaController extends BaseController {
             String nome = getRequiredParameter(request, "nome");
             
             if (nome.length() < 3 || nome.length() > 100) {
-                redirectWithError(response, request.getContextPath() + "/admin/categorias/edit/" + id, 
+                redirectWithError(response, request, request.getContextPath() + "/admin/categorias/edit/" + id, 
                     "Nome deve ter entre 3 e 100 caracteres");
                 return;
             }
             
             // Verificar se nome já existe (exceto para a categoria atual)
             if (categoriaDAO.existeNome(nome, id)) {
-                redirectWithError(response, request.getContextPath() + "/admin/categorias/edit/" + id, 
+                redirectWithError(response, request, request.getContextPath() + "/admin/categorias/edit/" + id, 
                     "Já existe uma categoria com este nome");
                 return;
             }
@@ -225,11 +225,11 @@ public class CategoriaController extends BaseController {
             // Atualizar no banco
             categoriaDAO.atualizar(categoria);
             
-            redirectWithSuccess(response, request.getContextPath() + "/admin/categorias", 
+            redirectWithSuccess(response, request, request.getContextPath() + "/admin/categorias", 
                 "Categoria atualizada com sucesso!");
                 
         } catch (Exception e) {
-            redirectWithError(response, request.getContextPath() + "/admin/categorias/edit/" + id, 
+            redirectWithError(response, request, request.getContextPath() + "/admin/categorias/edit/" + id, 
                 "Erro ao atualizar categoria: " + e.getMessage());
         }
     }

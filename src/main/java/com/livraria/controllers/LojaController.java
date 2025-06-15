@@ -15,6 +15,8 @@ import com.livraria.models.Livro;
 import com.livraria.models.Categoria;
 import com.livraria.models.User;
 
+// Adicionando a anotação que estava em falta
+@WebServlet("/loja/*")
 public class LojaController extends BaseController {
     
     private LivroDAO livroDAO;
@@ -71,6 +73,7 @@ public class LojaController extends BaseController {
         request.getRequestDispatcher("/WEB-INF/view/loja/index.jsp").forward(request, response);
     }
     
+    // ... (cole o resto dos seus métodos aqui, eles não precisam de alteração)
     private void mostrarCatalogo(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
         

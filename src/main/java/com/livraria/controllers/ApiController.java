@@ -14,9 +14,6 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Very small REST controller used by the demo application.
- */
 @WebServlet("/api/*")
 public class ApiController extends BaseController {
 

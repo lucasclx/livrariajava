@@ -138,8 +138,8 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="data_nascimento" class="form-label">Data de Nascimento</label>
-                                        <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" 
-                                               value="<fmt:formatDate value='${user.dataNascimento}' pattern='yyyy-MM-dd' />">
+                                       <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" 
+       										value="${user.dataNascimento}">
                                     </div>
                                     
                                     <div class="col-md-6 mb-3">

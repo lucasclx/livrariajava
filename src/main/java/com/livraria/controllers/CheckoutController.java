@@ -40,7 +40,7 @@ public class CheckoutController extends BaseController {
         checkAuthentication(request, response);
         User user = getAuthenticatedUser(request);
         if (user == null) {
-            redirectWithError(response, request.getContextPath() + "/login", "Você precisa estar logado para finalizar a compra.");
+            redirectWithError(response, request, request.getContextPath() + "/login", "Você precisa estar logado para finalizar a compra.");
             return;
         }
 
@@ -48,7 +48,7 @@ public class CheckoutController extends BaseController {
             // 2. Obter carrinho e verificar se não está vazio
             Cart cart = cartService.obterCarrinho(request);
             if (cart == null || cartService.contarItens(request) == 0) {
-                redirectWithError(response, request.getContextPath() + "/cart", "Seu carrinho está vazio.");
+                redirectWithError(response, request, request.getContextPath() + "/cart", "Seu carrinho está vazio.");
                 return;
             }
             
@@ -56,7 +56,7 @@ public class CheckoutController extends BaseController {
             List<String> stockErrors = cartService.validarEstoque(request);
             if (!stockErrors.isEmpty()) {
                 String errorMessage = "Itens indisponíveis: " + String.join(", ", stockErrors);
-                redirectWithError(response, request.getContextPath() + "/cart", errorMessage);
+                redirectWithError(response, request, request.getContextPath() + "/cart", errorMessage);
                 return;
             }
             
@@ -113,18 +113,18 @@ public class CheckoutController extends BaseController {
             request.getSession().removeAttribute("cart_count");
             
             // 5. Redirecionar para a página de sucesso
-            redirectWithSuccess(response, request.getContextPath() + "/perfil/pedidos", 
+            redirectWithSuccess(response, request, request.getContextPath() + "/perfil/pedidos", 
                 "Pedido #" + order.getOrderNumber() + " realizado com sucesso!");
 
         } catch (IllegalArgumentException | SecurityException e) {
             e.printStackTrace();
-            redirectWithError(response, request.getContextPath() + "/checkout", e.getMessage());
+            redirectWithError(response, request, request.getContextPath() + "/checkout", e.getMessage());
         } catch (IllegalStateException e) {
             e.printStackTrace();
-            redirectWithError(response, request.getContextPath() + "/cart", e.getMessage());
+            redirectWithError(response, request, request.getContextPath() + "/cart", e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            redirectWithError(response, request.getContextPath() + "/checkout", "Ocorreu um erro inesperado ao processar seu pedido. Tente novamente.");
+            redirectWithError(response, request, request.getContextPath() + "/checkout", "Ocorreu um erro inesperado ao processar seu pedido. Tente novamente.");
         }
     }
 }

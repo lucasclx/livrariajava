@@ -8,7 +8,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import com.livraria.dao.AvaliacaoDAO;
-
 import com.livraria.dao.UserDAO;
 import com.livraria.dao.OrderDAO;
 import com.livraria.dao.LivroDAO;
@@ -25,21 +24,24 @@ public class PerfilController extends BaseController {
     private UserDAO userDAO;
     private OrderDAO orderDAO;
     private LivroDAO livroDAO;
-    private AvaliacaoDAO avaliacaoDAO; // ADICIONADO
+    private AvaliacaoDAO avaliacaoDAO;
     
     @Override
     public void init() throws ServletException {
         userDAO = new UserDAO();
         orderDAO = new OrderDAO();
         livroDAO = new LivroDAO();
-        avaliacaoDAO = new AvaliacaoDAO(); // INICIALIZADO
+        avaliacaoDAO = new AvaliacaoDAO();
     }
     
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        checkAuthentication(request, response);
+        // Correção: Verificar o retorno e interromper se for falso
+        if (!checkAuthentication(request, response)) {
+            return;
+        }
         
         String pathInfo = request.getPathInfo();
         
@@ -53,7 +55,7 @@ public class PerfilController extends BaseController {
             } else if (pathInfo.equals("/favoritos")) {
                 mostrarFavoritos(request, response);
             } else if (pathInfo.equals("/avaliacoes")) {
-                mostrarAvaliacoes(request, response); // AGORA FUNCIONA
+                mostrarAvaliacoes(request, response);
             } else {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
@@ -66,7 +68,10 @@ public class PerfilController extends BaseController {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        checkAuthentication(request, response);
+        // Correção: Verificar o retorno e interromper se for falso
+        if (!checkAuthentication(request, response)) {
+            return;
+        }
         
         String pathInfo = request.getPathInfo();
         
@@ -79,21 +84,19 @@ public class PerfilController extends BaseController {
         }
     }
     
+    // O resto da classe (mostrarPerfil, mostrarFormularioEdicao, etc.) permanece igual.
+    // ... (cole o resto dos seus métodos aqui)
     private void mostrarPerfil(HttpServletRequest request, HttpServletResponse response)
             throws Exception {
         
         User user = getAuthenticatedUser(request);
         
-        // Estatísticas do usuário
         int totalPedidos = orderDAO.contarPorUsuario(user.getId());
         double valorTotalGasto = orderDAO.calcularTotalGastoPorUsuario(user.getId());
         int livrosFavoritos = livroDAO.contarFavoritos(user.getId());
         int avaliacoesFeitas = avaliacaoDAO.contarPorUsuario(user.getId());
         
-        // Últimos pedidos
         List<Order> ultimosPedidos = orderDAO.buscarUltimosPorUsuario(user.getId(), 5);
-        
-        // Livros favoritos
         List<Livro> favoritos = livroDAO.buscarFavoritos(user.getId(), 1, 6);
         
         request.setAttribute("user", user);
@@ -108,7 +111,7 @@ public class PerfilController extends BaseController {
     }
     
     private void mostrarFormularioEdicao(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws Exception {
         
         User user = getAuthenticatedUser(request);
         request.setAttribute("user", user);
@@ -127,27 +130,26 @@ public class PerfilController extends BaseController {
             String dataNascimentoStr = request.getParameter("data_nascimento");
             String genero = request.getParameter("genero");
             
-            // Validações
             if (name.length() < 2 || name.length() > 255) {
-                redirectWithError(response, request.getContextPath() + "/perfil/editar", 
+                redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
                     "Nome deve ter entre 2 e 255 caracteres");
                 return;
             }
             
             if (!ValidationUtil.isValidEmail(email)) {
-                redirectWithError(response, request.getContextPath() + "/perfil/editar", 
+                redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
                     "Email inválido");
                 return;
             }
             
             if (userDAO.emailJaExisteParaOutroUsuario(email, user.getId())) {
-                redirectWithError(response, request.getContextPath() + "/perfil/editar", 
+                redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
                     "Email já está em uso por outro usuário");
                 return;
             }
             
             if (telefone != null && !telefone.trim().isEmpty() && !ValidationUtil.isValidPhone(telefone)) {
-                redirectWithError(response, request.getContextPath() + "/perfil/editar", 
+                redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
                         "Telefone inválido");
                 return;
             }
@@ -160,7 +162,7 @@ public class PerfilController extends BaseController {
                         throw new Exception();
                     }
                 } catch (Exception e) {
-                    redirectWithError(response, request.getContextPath() + "/perfil/editar", 
+                    redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
                         "Data de nascimento inválida");
                     return;
                 }
@@ -177,11 +179,11 @@ public class PerfilController extends BaseController {
             request.getSession().setAttribute("user", user);
             request.getSession().setAttribute("user_name", user.getName());
             
-            redirectWithSuccess(response, request.getContextPath() + "/perfil", 
+            redirectWithSuccess(response, request, request.getContextPath() + "/perfil", 
                 "Perfil atualizado com sucesso!");
             
         } catch (Exception e) {
-            redirectWithError(response, request.getContextPath() + "/perfil/editar", 
+            redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
                 "Erro ao atualizar perfil: " + e.getMessage());
         }
     }
@@ -197,30 +199,30 @@ public class PerfilController extends BaseController {
             String confirmacao = getRequiredParameter(request, "nova_senha_confirmation");
             
             if (!PasswordUtil.verify(senhaAtual, user.getPassword())) {
-                redirectWithError(response, request.getContextPath() + "/perfil/editar", 
+                redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
                     "Senha atual incorreta");
                 return;
             }
             
             if (novaSenha.length() < 8) {
-                redirectWithError(response, request.getContextPath() + "/perfil/editar", 
+                redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
                     "Nova senha deve ter pelo menos 8 caracteres");
                 return;
             }
             
             if (!novaSenha.equals(confirmacao)) {
-                redirectWithError(response, request.getContextPath() + "/perfil/editar", 
+                redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
                     "Confirmação da nova senha não confere");
                 return;
             }
             
             userDAO.atualizarSenha(user.getId(), PasswordUtil.hash(novaSenha));
             
-            redirectWithSuccess(response, request.getContextPath() + "/perfil", 
+            redirectWithSuccess(response, request, request.getContextPath() + "/perfil", 
                 "Senha alterada com sucesso!");
             
         } catch (Exception e) {
-            redirectWithError(response, request.getContextPath() + "/perfil/editar", 
+            redirectWithError(response, request, request.getContextPath() + "/perfil/editar", 
                 "Erro ao alterar senha: " + e.getMessage());
         }
     }

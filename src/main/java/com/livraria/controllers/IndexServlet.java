@@ -8,10 +8,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Servlet para página inicial - CORRIGIDO
- * Agora só intercepta "/" e "/index", não conflita com outras rotas
+ * Servlet para página inicial.
+ * Mapeado para a raiz ("") do contexto, redireciona para a página da loja.
  */
-@WebServlet(name = "IndexServlet", urlPatterns = {"/index"})
+@WebServlet(urlPatterns = {"", "/index"})
 public class IndexServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
@@ -19,21 +19,7 @@ public class IndexServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        String requestURI = request.getRequestURI();
-        String contextPath = request.getContextPath();
-        
-        // Debug log
-        System.out.println("[IndexServlet] RequestURI: " + requestURI);
-        System.out.println("[IndexServlet] ContextPath: " + contextPath);
-        
-        // Se a requisição é exatamente para a raiz, redirecionar para /loja/
-        if (requestURI.equals(contextPath + "/") || requestURI.equals(contextPath + "/index")) {
-            response.sendRedirect(contextPath + "/loja/");
-            return;
-        }
-        
-        // Caso contrário, encaminhar para index.jsp
-        request.getRequestDispatcher("/index.jsp").forward(request, response);
+        response.sendRedirect(request.getContextPath() + "/loja/");
     }
     
     @Override
