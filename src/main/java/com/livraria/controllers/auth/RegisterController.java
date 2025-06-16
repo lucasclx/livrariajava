@@ -14,7 +14,9 @@ import com.livraria.models.User;
 import com.livraria.utils.PasswordUtil;
 import com.livraria.utils.ValidationUtil;
 
-
+// --- INÍCIO DA CORREÇÃO ---
+@WebServlet("/register")
+// --- FIM DA CORREÇÃO ---
 public class RegisterController extends BaseController {
     
     private UserDAO userDAO;
@@ -127,14 +129,12 @@ public class RegisterController extends BaseController {
                 return;
             }
             
-            // --- INÍCIO DA CORREÇÃO ---
             // Valida o valor de 'genero'. Se for inválido ou vazio, trata como nulo.
             // Isso evita o erro "Data truncated for column 'genero'" no banco de dados.
             String generoParaSalvar = null;
             if (genero != null && (genero.equals("M") || genero.equals("F") || genero.equals("Outro"))) {
                 generoParaSalvar = genero;
             }
-            // --- FIM DA CORREÇÃO ---
             
             // Criar novo usuário
             User newUser = new User();
