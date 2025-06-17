@@ -74,19 +74,7 @@
     </filter-mapping>
 
     <!-- Registrar Servlets Principais -->
-    <servlet>
-        <servlet-name>IndexServlet</servlet-name>
-        <servlet-class>com.livraria.controllers.IndexServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>IndexServlet</servlet-name>
-        <url-pattern></url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>IndexServlet</servlet-name>
-        <url-pattern>/index</url-pattern>
-    </servlet-mapping>
+    <!-- IndexServlet removido do web.xml - usando @WebServlet no código -->
 
     <servlet>
         <servlet-name>LojaController</servlet-name>
@@ -97,6 +85,7 @@
         <url-pattern>/loja/*</url-pattern>
     </servlet-mapping>
 
+    <!-- Controllers de Autenticação -->
     <servlet>
         <servlet-name>LoginController</servlet-name>
         <servlet-class>com.livraria.controllers.auth.LoginController</servlet-class>
@@ -124,10 +113,15 @@
         <url-pattern>/logout</url-pattern>
     </servlet-mapping>
 
+    <!-- Controllers Principais -->
     <servlet>
         <servlet-name>CartController</servlet-name>
         <servlet-class>com.livraria.controllers.CartController</servlet-class>
     </servlet>
+    <servlet-mapping>
+        <servlet-name>CartController</servlet-name>
+        <url-pattern>/cart</url-pattern>
+    </servlet-mapping>
     <servlet-mapping>
         <servlet-name>CartController</servlet-name>
         <url-pattern>/cart/*</url-pattern>
@@ -140,6 +134,10 @@
     <servlet-mapping>
         <servlet-name>CheckoutController</servlet-name>
         <url-pattern>/checkout</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>CheckoutController</servlet-name>
+        <url-pattern>/checkout/*</url-pattern>
     </servlet-mapping>
 
     <servlet>
@@ -169,6 +167,7 @@
         <url-pattern>/search</url-pattern>
     </servlet-mapping>
 
+    <!-- Controllers de API -->
     <servlet>
         <servlet-name>ApiController</servlet-name>
         <servlet-class>com.livraria.controllers.ApiController</servlet-class>
@@ -187,7 +186,7 @@
         <url-pattern>/api/cart/*</url-pattern>
     </servlet-mapping>
 
-    <!-- Servlets de Admin -->
+    <!-- Controllers de Administração -->
     <servlet>
         <servlet-name>AdminController</servlet-name>
         <servlet-class>com.livraria.controllers.AdminController</servlet-class>
