@@ -2,15 +2,12 @@ package com.livraria.controllers;
 
 import java.io.IOException;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet; // 1. Verifique se este import existe
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- * Servlet para página inicial.
- * Mapeado para a raiz ("") do contexto, redireciona para a página da loja.
- * Configuração no web.xml
- */
+@WebServlet("") // 2. Verifique se esta anotação está presente
 public class IndexServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     

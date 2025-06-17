@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
+import javax.servlet.annotation.WebServlet; // Verifique o import
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -16,7 +16,8 @@ import com.livraria.models.CartItem;
 import com.livraria.models.Livro;
 import com.livraria.models.User;
 
-@WebServlet("/cart/*")
+// ANOTAÇÃO CORRIGIDA AQUI:
+@WebServlet({"/cart", "/cart/*"})
 public class CartController extends BaseController {
     
     private CartDAO cartDAO;
@@ -34,6 +35,7 @@ public class CartController extends BaseController {
         
         String pathInfo = request.getPathInfo();
         
+        // A lógica aqui já trata pathInfo nulo (para /cart) e "/" (para /cart/)
         if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("/index")) {
             mostrarCarrinho(request, response);
         } else if (pathInfo.equals("/count")) {
@@ -45,6 +47,9 @@ public class CartController extends BaseController {
         }
     }
     
+    // O restante do seu código na classe não precisa de alterações.
+    // ...
+    // ... cole o resto dos seus métodos aqui ...
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -100,7 +105,8 @@ public class CartController extends BaseController {
             request.setAttribute("totalItens", totalItens);
             request.setAttribute("sugestoes", sugestoes);
             
-            request.getRequestDispatcher("/cart/index.jsp").forward(request, response);
+            // LINHA CORRIGIDA: Adicione o caminho "/WEB-INF/view"
+            request.getRequestDispatcher("/WEB-INF/view/cart/index.jsp").forward(request, response);
             
         } catch (Exception e) {
             throw new ServletException("Erro ao carregar carrinho", e);
@@ -267,14 +273,14 @@ public class CartController extends BaseController {
         try {
             Cart cart = obterCarrinho(request);
             if (cart == null) {
-                redirectWithError(response, request.getContextPath() + "/cart", 
+                redirectWithError(response, request, request.getContextPath() + "/cart", 
                     "Seu carrinho está vazio");
                 return;
             }
             
             List<CartItem> items = cartDAO.listarItensDoCarrinho(cart.getId());
             if (items.isEmpty()) {
-                redirectWithError(response, request.getContextPath() + "/cart", 
+                redirectWithError(response, request, request.getContextPath() + "/cart", 
                     "Seu carrinho está vazio");
                 return;
             }
@@ -284,7 +290,7 @@ public class CartController extends BaseController {
             if (!errosEstoque.isEmpty()) {
                 String mensagem = "Alguns itens não estão mais disponíveis: " + 
                     String.join(", ", errosEstoque);
-                redirectWithError(response, request.getContextPath() + "/cart", mensagem);
+                redirectWithError(response, request, request.getContextPath() + "/cart", mensagem);
                 return;
             }
             

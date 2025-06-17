@@ -1,43 +1,42 @@
 package com.livraria.utils;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 
 /**
- * Fábrica de conexões com o banco de dados usando DriverManager.
- * Esta é uma abordagem mais simples, ideal para desenvolvimento e projetos menores,
- * pois não depende da configuração JNDI do servidor.
+ * Fábrica de conexões com o banco de dados usando DataSource (JNDI).
+ * Esta é a abordagem recomendada para ambientes de servidor de aplicação como o Tomcat,
+ * pois o servidor gerencia o pool de conexões e o ciclo de vida do driver.
  */
 public class ConnectionFactory {
 
-    // --- Detalhes da Conexão ---
-    // Substitua com suas credenciais, se forem diferentes.
-    private static final String DB_DRIVER = "com.mysql.cj.jdbc.Driver";
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/livraria_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Sao_Paulo&useUnicode=true&characterEncoding=UTF-8";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = ""; // Coloque sua senha do MySQL aqui, se houver.
+    private static DataSource dataSource;
 
-    /**
-     * Carrega o driver do MySQL uma única vez quando a classe é inicializada.
-     */
     static {
         try {
-            // Carrega a classe do driver na memória
-            Class.forName(DB_DRIVER);
-        } catch (ClassNotFoundException e) {
+            // Realiza o lookup do DataSource no contexto JNDI do Tomcat
+            Context initContext = new InitialContext();
+            Context envContext = (Context) initContext.lookup("java:/comp/env");
+            dataSource = (DataSource) envContext.lookup("jdbc/livraria");
+        } catch (NamingException e) {
             // Este é um erro fatal que impede a aplicação de se conectar ao banco.
-            throw new RuntimeException("ERRO FATAL: Driver JDBC do MySQL não encontrado.", e);
+            throw new RuntimeException("ERRO FATAL: Não foi possível encontrar o DataSource JNDI 'jdbc/livraria'. Verifique a configuração em context.xml e web.xml.", e);
         }
     }
 
     /**
-     * Retorna uma nova conexão com o banco de dados a cada chamada.
-     * * @return uma conexão com o banco de dados.
+     * Retorna uma nova conexão do pool de conexões gerenciado pelo Tomcat.
+     * @return uma conexão com o banco de dados.
      * @throws SQLException se não for possível estabelecer a conexão.
      */
     public static Connection getConnection() throws SQLException {
-        // Tenta estabelecer a conexão usando os dados fornecidos
-        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        if (dataSource == null) {
+            throw new SQLException("DataSource não foi inicializado corretamente.");
+        }
+        return dataSource.getConnection();
     }
 }
