@@ -1,3 +1,5 @@
+// livrariajava/src/main/java/com/livraria/models/Livro.java
+
 package com.livraria.models;
 
 import java.math.BigDecimal;
@@ -54,7 +56,7 @@ public class Livro {
         this.idioma = "Português";
     }
     
-    // Getters e Setters
+    // Getters e Setters ... (todos os getters e setters existentes)
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
     
@@ -147,6 +149,8 @@ public class Livro {
     
     public Categoria getCategoria() { return categoria; }
     public void setCategoria(Categoria categoria) { this.categoria = categoria; }
+
+    // --- INÍCIO DAS MODIFICAÇÕES ---
     
     // Métodos de negócio
     public BigDecimal getPrecoFinal() {
@@ -227,6 +231,8 @@ public class Livro {
         public String getCor() { return cor; }
         public String getTexto() { return texto; }
     }
+    
+    // --- FIM DAS MODIFICAÇÕES ---
     
     @Override
     public String toString() {

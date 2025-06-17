@@ -73,7 +73,6 @@ public class LojaController extends BaseController {
         request.getRequestDispatcher("/WEB-INF/view/loja/index.jsp").forward(request, response);
     }
     
-    // ... (cole o resto dos seus métodos aqui, eles não precisam de alteração)
     private void mostrarCatalogo(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
         

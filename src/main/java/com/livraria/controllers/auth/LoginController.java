@@ -27,6 +27,22 @@ public class LoginController extends BaseController {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        // --- INÍCIO DO BLOCO DE CÓDIGO TEMPORÁRIO ---
+        // Este código irá gerar um hash válido para a senha "123456" e imprimi-lo no console do servidor.
+        // Copie o hash gerado e use-o para atualizar a senha no banco de dados.
+        // DEPOIS DE USAR, REMOVA ESTE BLOCO DE CÓDIGO.
+        try {
+            String senhaAdmin = "123456";
+            String hashValido = com.livraria.utils.PasswordUtil.hash(senhaAdmin);
+            System.out.println("==========================================================");
+            System.out.println("NOVO HASH VÁLIDO PARA A SENHA '123456':");
+            System.out.println(hashValido);
+            System.out.println("==========================================================");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        // --- FIM DO BLOCO DE CÓDIGO TEMPORÁRIO ---
+
         // Se já está logado, redirecionar
         if (isAuthenticated(request)) {
             User user = getAuthenticatedUser(request);

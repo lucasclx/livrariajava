@@ -16,8 +16,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
@@ -33,16 +31,23 @@
             --light-color: #f8f9fa;
         }
 
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
         }
 
         .sidebar {
             background: linear-gradient(135deg, var(--dark-color) 0%, #495057 100%);
             min-height: 100vh;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            position: relative;
         }
 
         .sidebar .nav-link {
@@ -51,6 +56,7 @@
             border-radius: 8px;
             margin: 0.25rem 0.5rem;
             transition: all 0.3s ease;
+            text-decoration: none;
         }
 
         .sidebar .nav-link:hover {
@@ -66,6 +72,7 @@
 
         .main-content {
             padding: 2rem;
+            flex: 1;
         }
 
         .stats-card {
@@ -74,13 +81,12 @@
             padding: 1.5rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             border: none;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.3s ease;
             height: 100%;
         }
 
         .stats-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
         .stats-number {
@@ -120,12 +126,11 @@
             margin-bottom: 0.75rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             border-left: 4px solid var(--primary-color);
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease;
         }
 
         .activity-item:hover {
             transform: translateX(5px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
         .alert-item {
@@ -156,6 +161,10 @@
             vertical-align: middle;
         }
 
+        .table-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+
         .badge-status {
             padding: 0.5rem 1rem;
             border-radius: 20px;
@@ -171,16 +180,13 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        .progress-custom {
-            height: 8px;
-            border-radius: 10px;
-            background: #e9ecef;
+        .canvas-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
         }
 
-        .progress-custom .progress-bar {
-            border-radius: 10px;
-        }
-
+        /* Otimizações para mobile */
         @media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -197,6 +203,31 @@
 
             .main-content {
                 padding: 1rem;
+            }
+
+            .stats-card, .chart-container {
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+            }
+
+            .canvas-container {
+                height: 250px;
+            }
+        }
+
+        /* Otimização de performance */
+        .chart-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+        }
+
+        /* Reduzir animações em dispositivos de baixo desempenho */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
             }
         }
     </style>
@@ -288,7 +319,7 @@
                                     <i class="${alerta.icon} me-3 fs-4"></i>
                                     <div class="flex-grow-1">
                                         <strong>${alerta.title}</strong>
-                                        <p class="mb-0">${alerta.message}</p>
+                                        <p class="mb-0">${alerta.description}</p>
                                     </div>
                                     <c:if test="${not empty alerta.action}">
                                         <a href="${pageContext.request.contextPath}${alerta.action}" class="btn btn-sm btn-outline-${alerta.type}">
@@ -382,7 +413,14 @@
                             <h5 class="mb-3">
                                 <i class="fas fa-chart-line me-2"></i>Vendas dos Últimos 30 Dias
                             </h5>
-                            <canvas id="salesChart" height="100"></canvas>
+                            <div class="canvas-container">
+                                <div id="salesChartLoading" class="chart-loading">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Carregando...</span>
+                                    </div>
+                                </div>
+                                <canvas id="salesChart" style="display: none;"></canvas>
+                            </div>
                         </div>
                     </div>
 
@@ -391,7 +429,14 @@
                             <h5 class="mb-3">
                                 <i class="fas fa-chart-pie me-2"></i>Vendas por Categoria
                             </h5>
-                            <canvas id="categoryChart" height="100"></canvas>
+                            <div class="canvas-container">
+                                <div id="categoryChartLoading" class="chart-loading">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Carregando...</span>
+                                    </div>
+                                </div>
+                                <canvas id="categoryChart" style="display: none;"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -659,96 +704,256 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Charts JavaScript -->
+    <!-- Dashboard JavaScript Otimizado -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        // Variáveis globais para controlar instâncias
+        let salesChart = null;
+        let categoryChart = null;
+        let refreshInterval = null;
+        let isChartInitialized = false;
+        
+        // Cache para dados dos gráficos
+        let chartDataCache = {
+            salesData: null,
+            categoryData: null,
+            lastUpdate: null
+        };
+
+        // Função para limpar recursos anteriores
+        function cleanup() {
+            if (salesChart) {
+                salesChart.destroy();
+                salesChart = null;
+            }
+            if (categoryChart) {
+                categoryChart.destroy();
+                categoryChart = null;
+            }
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+        }
+
+        // Função para gerar dados de vendas (cache para evitar regeneração)
+        function getSalesData() {
+            if (!chartDataCache.salesData) {
+                chartDataCache.salesData = generateRandomData(30, 100, 1000);
+                chartDataCache.lastUpdate = Date.now();
+            }
+            return chartDataCache.salesData;
+        }
+
+        // Função para gerar dados de categoria (cache)
+        function getCategoryData() {
+            if (!chartDataCache.categoryData) {
+                chartDataCache.categoryData = [30, 25, 20, 15, 10];
+            }
+            return chartDataCache.categoryData;
+        }
+
+        // Função para inicializar gráficos com lazy loading
+        function initializeCharts() {
+            if (isChartInitialized) return;
+            
             // Sales Chart
-            const salesCtx = document.getElementById('salesChart').getContext('2d');
-            const salesChart = new Chart(salesCtx, {
-                type: 'line',
-                data: {
-                    labels: generateLastNDays(30),
-                    datasets: [{
-                        label: 'Vendas (R$)',
-                        data: generateRandomData(30, 100, 1000),
-                        borderColor: 'rgb(102, 126, 234)',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0,0,0,0.05)'
-                            }
+            const salesCtx = document.getElementById('salesChart');
+            const salesLoading = document.getElementById('salesChartLoading');
+            
+            if (salesCtx) {
+                try {
+                    salesChart = new Chart(salesCtx.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: generateLastNDays(30),
+                            datasets: [{
+                                label: 'Vendas (R$)',
+                                data: getSalesData(),
+                                borderColor: 'rgb(102, 126, 234)',
+                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                pointRadius: 0,
+                                pointHoverRadius: 5
+                            }]
                         },
-                        x: {
-                            grid: {
-                                display: false
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: {
+                                intersect: false,
+                                mode: 'index'
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: 'rgba(0,0,0,0.05)'
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    }
+                                }
+                            },
+                            animation: {
+                                duration: 1000
+                            },
+                            elements: {
+                                point: {
+                                    radius: 0,
+                                    hoverRadius: 5
+                                }
                             }
                         }
-                    }
+                    });
+                    
+                    // Mostrar gráfico e ocultar loading
+                    salesLoading.style.display = 'none';
+                    salesCtx.style.display = 'block';
+                } catch (error) {
+                    console.error('Erro ao inicializar gráfico de vendas:', error);
+                    salesLoading.innerHTML = '<div class="text-danger">Erro ao carregar gráfico</div>';
                 }
-            });
+            }
 
             // Category Chart
-            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-            const categoryChart = new Chart(categoryCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Ficção', 'Técnico', 'Infantil', 'Autoajuda', 'Outros'],
-                    datasets: [{
-                        data: [30, 25, 20, 15, 10],
-                        backgroundColor: [
-                            'rgb(102, 126, 234)',
-                            'rgb(118, 75, 162)',
-                            'rgb(40, 167, 69)',
-                            'rgb(255, 193, 7)',
-                            'rgb(220, 53, 69)'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true
+            const categoryCtx = document.getElementById('categoryChart');
+            const categoryLoading = document.getElementById('categoryChartLoading');
+            
+            if (categoryCtx) {
+                try {
+                    categoryChart = new Chart(categoryCtx.getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Ficção', 'Técnico', 'Infantil', 'Autoajuda', 'Outros'],
+                            datasets: [{
+                                data: getCategoryData(),
+                                backgroundColor: [
+                                    'rgb(102, 126, 234)',
+                                    'rgb(118, 75, 162)',
+                                    'rgb(40, 167, 69)',
+                                    'rgb(255, 193, 7)',
+                                    'rgb(220, 53, 69)'
+                                ],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 20,
+                                        usePointStyle: true
+                                    }
+                                }
+                            },
+                            animation: {
+                                duration: 800
                             }
                         }
-                    }
+                    });
+                    
+                    // Mostrar gráfico e ocultar loading
+                    categoryLoading.style.display = 'none';
+                    categoryCtx.style.display = 'block';
+                } catch (error) {
+                    console.error('Erro ao inicializar gráfico de categorias:', error);
+                    categoryLoading.innerHTML = '<div class="text-danger">Erro ao carregar gráfico</div>';
                 }
-            });
+            }
+            
+            isChartInitialized = true;
+        }
 
-            // Initialize tooltips
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
+        // Função para atualizar dados via AJAX (mais eficiente que reload)
+        function updateDashboardData() {
+            try {
+                // Simular atualização de dados - substituir por chamada AJAX real
+                console.log('Atualizando dados do dashboard...');
+                
+                // Exemplo de atualização dos gráficos com novos dados
+                if (salesChart) {
+                    // Invalidar cache para forçar novos dados
+                    chartDataCache.salesData = null;
+                    salesChart.data.datasets[0].data = getSalesData();
+                    salesChart.update('none'); // Update sem animação para melhor performance
+                }
+                
+                // Aqui você pode adicionar chamadas AJAX reais para atualizar outros dados
+                // fetch('/admin/api/dashboard-stats')
+                //     .then(response => response.json())
+                //     .then(data => {
+                //         // Atualizar elementos da página com novos dados
+                //     })
+                //     .catch(error => console.error('Erro ao atualizar dados:', error));
+                
+            } catch (error) {
+                console.error('Erro ao atualizar dashboard:', error);
+            }
+        }
+
+        // Inicialização quando DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', function() {
+            // Limpar recursos anteriores (caso necessário)
+            cleanup();
+            
+            // Inicializar gráficos com delay para melhor performance
+            setTimeout(initializeCharts, 100);
+            
+            // Initialize tooltips de forma eficiente
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            if (tooltipTriggerList.length > 0) {
+                tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+                    new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+            
+            // Auto-refresh CORRIGIDO - usando uma única instância global
+            if (!window.dashboardRefreshActive) {
+                window.dashboardRefreshActive = true;
+                
+                // Atualizar a cada 5 minutos (300000ms)
+                refreshInterval = setInterval(updateDashboardData, 300000);
+            }
         });
 
-        // Helper functions
+        // Cleanup quando a página for fechada/recarregada
+        window.addEventListener('beforeunload', function() {
+            cleanup();
+            window.dashboardRefreshActive = false;
+        });
+
+        // Cleanup quando sair da página (para SPAs)
+        window.addEventListener('pagehide', function() {
+            cleanup();
+            window.dashboardRefreshActive = false;
+        });
+
+        // Helper functions otimizadas
         function generateLastNDays(n) {
             const days = [];
+            const today = new Date();
+            
             for (let i = n - 1; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i);
-                days.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                days.push(date.toLocaleDateString('pt-BR', { 
+                    day: '2-digit', 
+                    month: '2-digit' 
+                }));
             }
             return days;
         }
@@ -761,25 +966,101 @@
             return data;
         }
 
-        // Auto-refresh dashboard every 5 minutes
-        setInterval(function() {
-            location.reload();
-        }, 300000);
-
-        // Mobile sidebar toggle
+        // Mobile sidebar toggle otimizado
         function toggleSidebar() {
-            document.querySelector('.sidebar').classList.toggle('show');
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('show');
+            }
         }
 
-        // Add mobile menu button if needed
-        if (window.innerWidth <= 768) {
-            const headerSection = document.querySelector('.header-section');
-            const mobileMenuBtn = document.createElement('button');
-            mobileMenuBtn.className = 'btn btn-outline-primary d-md-none';
-            mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
-            mobileMenuBtn.onclick = toggleSidebar;
-            headerSection.querySelector('.d-flex').insertBefore(mobileMenuBtn, headerSection.querySelector('.d-flex').firstChild);
+        // Configuração do menu mobile - executar apenas uma vez
+        (function initMobileMenu() {
+            if (window.innerWidth <= 768 && !document.querySelector('.mobile-menu-btn')) {
+                const headerSection = document.querySelector('.header-section');
+                if (headerSection) {
+                    const flexContainer = headerSection.querySelector('.d-flex');
+                    if (flexContainer) {
+                        const mobileMenuBtn = document.createElement('button');
+                        mobileMenuBtn.className = 'btn btn-outline-primary d-md-none mobile-menu-btn';
+                        mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                        mobileMenuBtn.onclick = toggleSidebar;
+                        mobileMenuBtn.setAttribute('aria-label', 'Toggle menu');
+                        flexContainer.insertBefore(mobileMenuBtn, flexContainer.firstChild);
+                    }
+                }
+            }
+        })();
+
+        // Fechar sidebar ao clicar fora (mobile)
+        document.addEventListener('click', function(event) {
+            const sidebar = document.querySelector('.sidebar');
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('show')) {
+                if (!sidebar.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+                    sidebar.classList.remove('show');
+                }
+            }
+        });
+
+        // Otimização: Detectar vazamentos de memória (apenas em desenvolvimento)
+        if (typeof performance !== 'undefined' && performance.memory) {
+            let memoryWarningShown = false;
+            const memoryCheckInterval = setInterval(function() {
+                if (!memoryWarningShown) {
+                    const used = performance.memory.usedJSHeapSize / 1048576; // MB
+                    if (used > 150) { // Se usar mais de 150MB
+                        console.warn('Alto uso de memória detectado:', used.toFixed(2) + 'MB');
+                        memoryWarningShown = true;
+                        
+                        // Opcional: Mostrar alerta para o usuário
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-warning alert-dismissible fade show position-fixed';
+                        alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+                        alertDiv.innerHTML = `
+                            <strong>Aviso:</strong> Alto uso de memória detectado. 
+                            Considere recarregar a página.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        `;
+                        document.body.appendChild(alertDiv);
+                        
+                        // Limpar o intervalo para não continuar verificando
+                        clearInterval(memoryCheckInterval);
+                    }
+                }
+            }, 60000); // Verificar a cada 1 minuto
         }
+
+        // Intersection Observer para lazy loading de elementos pesados
+        if ('IntersectionObserver' in window) {
+            const lazyElements = document.querySelectorAll('[data-lazy]');
+            const lazyObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const element = entry.target;
+                        // Executar ação lazy loading aqui
+                        element.classList.add('loaded');
+                        lazyObserver.unobserve(element);
+                    }
+                });
+            });
+            
+            lazyElements.forEach(element => {
+                lazyObserver.observe(element);
+            });
+        }
+
+        // Debounce para redimensionamento de janela
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                // Redimensionar gráficos se necessário
+                if (salesChart) salesChart.resize();
+                if (categoryChart) categoryChart.resize();
+            }, 250);
+        });
     </script>
 </body>
 </html>

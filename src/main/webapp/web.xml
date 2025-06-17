@@ -30,7 +30,10 @@
     <listener>
         <listener-class>com.livraria.listeners.SessionListener</listener-class>
     </listener>
-
+    
+    <listener>
+        <listener-class>com.livraria.listeners.MysqlConnectionCleanupListener</listener-class>
+    </listener>
     <session-config>
         <session-timeout>30</session-timeout>
         <cookie-config>
