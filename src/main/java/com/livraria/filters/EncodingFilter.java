@@ -34,9 +34,14 @@ public class EncodingFilter implements Filter {
             httpRequest.setCharacterEncoding(encoding);
         }
         
-        // Definir encoding e headers para response
+        // --- CORREÇÃO INÍCIO ---
+        // A linha que definia o Content-Type foi removida.
+        // O servidor de aplicação (Tomcat) irá agora definir o MIME type correto para cada recurso.
+        // A linha httpResponse.setContentType("text/html; charset=" + encoding); foi removida daqui.
+        // --- CORREÇÃO FIM ---
+        
+        // Definir encoding para response ainda é uma boa prática
         httpResponse.setCharacterEncoding(encoding);
-        httpResponse.setContentType("text/html; charset=" + encoding);
         
         // Headers de segurança
         addSecurityHeaders(httpResponse);

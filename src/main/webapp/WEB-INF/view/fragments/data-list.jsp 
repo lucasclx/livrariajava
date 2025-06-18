@@ -1,0 +1,30 @@
+<!-- /WEB-INF/view/fragments/data-list.jsp -->
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+
+<c:choose>
+    <c:when test="${empty items}">
+        <div class="empty-state text-center py-5">
+            <i class="${emptyIcon} fa-4x text-muted mb-3"></i>
+            <h4>${emptyTitle}</h4>
+            <p class="text-muted">${emptyMessage}</p>
+            <c:if test="${not empty emptyAction}">
+                ${emptyAction}
+            </c:if>
+        </div>
+    </c:when>
+    <c:otherwise>
+        <div class="row">
+            <c:forEach var="item" items="${items}">
+                <div class="${itemClass}">
+                    <jsp:include page="${itemTemplate}">
+                        <jsp:param name="item" value="${item}" />
+                    </jsp:include>
+                </div>
+            </c:forEach>
+        </div>
+        
+        <c:if test="${showPagination and totalPages > 1}">
+            <jsp:include page="../fragments/pagination.jsp" />
+        </c:if>
+    </c:otherwise>
+</c:choose>

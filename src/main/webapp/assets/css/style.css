@@ -1,1 +1,43 @@
-@charset "UTF-8";
+/* ============================================= */
+/* ==         ESTILOS DE NOTIFICAÇÃO          == */
+/* ============================================= */
+
+.toast-notification {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    padding: 18px 25px;
+    border-radius: 8px;
+    background-color: #333;
+    color: #fff;
+    font-family: sans-serif;
+    font-size: 1rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 1060;
+    opacity: 0;
+    transform: translateY(100px);
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    pointer-events: none;
+}
+
+.toast-notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-notification.success {
+    background-color: #28a745; /* Verde Sucesso */
+}
+
+.toast-notification.error {
+    background-color: #dc3545; /* Vermelho Erro */
+}
+
+.toast-notification.info {
+    background-color: #17a2b8; /* Azul Informação */
+}
+
+/* Estilo para o spinner dentro dos botões */
+.btn .spinner-border {
+    margin-right: 5px;
+}
