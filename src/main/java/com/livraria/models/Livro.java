@@ -211,7 +211,7 @@ public class Livro {
     }
     
     private String getPlaceholderImage() {
-        return "/livraria/assets/images/placeholder-book.jpg";
+        return "/images/placeholders/no-image.png";
     }
     
     // Classes auxiliares

@@ -624,6 +624,8 @@ public class LivroDAO extends BaseDAO<Livro> {
         livro.setImagem(rs.getString("imagem"));
         livro.setAtivo(rs.getBoolean("ativo"));
         livro.setDestaque(rs.getBoolean("destaque"));
+        livro.setAvaliacaoMedia(rs.getBigDecimal("avaliacao_media"));
+        livro.setTotalAvaliacoes(rs.getInt("total_avaliacoes"));
         
         // Campos opcionais que podem não existir
         try {
