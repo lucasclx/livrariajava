@@ -45,7 +45,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="${pageContext.request.contextPath}/cart">
                             <i class="fas fa-shopping-cart"></i>
-                            <span class="badge rounded-pill bg-danger" id="cart-count">0</span>
+                            <span id="cart-count" class="badge rounded-pill bg-primary">${not empty sessionScope.cart_count ? sessionScope.cart_count : 0}</span>
                         </a>
                     </li>
                 </ul>

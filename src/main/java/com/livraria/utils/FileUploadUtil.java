@@ -13,7 +13,7 @@ public class FileUploadUtil {
     private static final String[] ALLOWED_IMAGE_TYPES = {
         "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"
     };
-    
+
     /**
      * Faz upload de imagem
      */
@@ -21,39 +21,39 @@ public class FileUploadUtil {
         if (filePart == null || filePart.getSize() == 0) {
             throw new IllegalArgumentException("Arquivo não fornecido");
         }
-        
+
         // Validar tamanho
         if (filePart.getSize() > MAX_FILE_SIZE) {
             throw new IllegalArgumentException("Arquivo muito grande. Máximo permitido: 2MB");
         }
-        
+
         // Validar tipo
         String contentType = filePart.getContentType();
         if (!isValidImageType(contentType)) {
             throw new IllegalArgumentException("Tipo de arquivo não permitido. Use: JPG, PNG, GIF ou WebP");
         }
-        
+
         // Gerar nome único
         String originalFilename = getFileName(filePart);
         String extension = getFileExtension(originalFilename);
         String newFilename = UUID.randomUUID().toString() + "." + extension;
-        
+
         // Criar diretório se não existir
         String uploadPath = getUploadPath() + folder;
         Path uploadDir = Paths.get(uploadPath);
         if (!Files.exists(uploadDir)) {
             Files.createDirectories(uploadDir);
         }
-        
+
         // Salvar arquivo
         Path filePath = uploadDir.resolve(newFilename);
         try (InputStream inputStream = filePart.getInputStream()) {
             Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
         }
-        
+
         return newFilename;
     }
-    
+
     /**
      * Remove imagem
      */
@@ -61,7 +61,7 @@ public class FileUploadUtil {
         if (filename == null || filename.trim().isEmpty()) {
             return false;
         }
-        
+
         try {
             Path filePath = Paths.get(getUploadPath() + folder, filename);
             return Files.deleteIfExists(filePath);
@@ -70,13 +70,13 @@ public class FileUploadUtil {
             return false;
         }
     }
-    
+
     /**
      * Verifica se o tipo de arquivo é uma imagem válida
      */
     private static boolean isValidImageType(String contentType) {
         if (contentType == null) return false;
-        
+
         for (String allowedType : ALLOWED_IMAGE_TYPES) {
             if (allowedType.equals(contentType)) {
                 return true;
@@ -84,7 +84,7 @@ public class FileUploadUtil {
         }
         return false;
     }
-    
+
     /**
      * Extrai nome do arquivo do Part
      */
@@ -99,7 +99,7 @@ public class FileUploadUtil {
         }
         return "unknown";
     }
-    
+
     /**
      * Extrai extensão do arquivo
      */
@@ -109,7 +109,7 @@ public class FileUploadUtil {
         }
         return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
     }
-    
+
     /**
      * Obtém caminho base para uploads
      */
@@ -118,7 +118,7 @@ public class FileUploadUtil {
         String webAppPath = System.getProperty("catalina.base", System.getProperty("user.dir"));
         return webAppPath + "/webapps/livrariajava" + UPLOAD_BASE_PATH;
     }
-    
+
     /**
      * Gera URL pública para a imagem
      */
@@ -128,7 +128,7 @@ public class FileUploadUtil {
         }
         return "/livrariajava" + UPLOAD_BASE_PATH + folder + "/" + filename;
     }
-    
+
     /**
      * Valida se arquivo existe
      */
@@ -136,11 +136,11 @@ public class FileUploadUtil {
         if (filename == null || filename.trim().isEmpty()) {
             return false;
         }
-        
+
         Path filePath = Paths.get(getUploadPath() + folder, filename);
         return Files.exists(filePath);
     }
-    
+
     /**
      * Obtém tamanho do arquivo em bytes
      */
@@ -152,7 +152,7 @@ public class FileUploadUtil {
             return 0;
         }
     }
-    
+
     /**
      * Lista arquivos em uma pasta
      */
@@ -162,7 +162,7 @@ public class FileUploadUtil {
             if (!Files.exists(folderPath)) {
                 return new String[0];
             }
-            
+
             return Files.list(folderPath)
                        .filter(Files::isRegularFile)
                        .map(path -> path.getFileName().toString())

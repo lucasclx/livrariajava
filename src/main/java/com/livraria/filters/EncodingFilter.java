@@ -11,9 +11,9 @@ import java.io.IOException;
  */
 @WebFilter("/*")
 public class EncodingFilter implements Filter {
-    
+
     private String encoding = "UTF-8";
-    
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         String encodingParam = filterConfig.getInitParameter("encoding");
@@ -21,50 +21,50 @@ public class EncodingFilter implements Filter {
             encoding = encodingParam;
         }
     }
-    
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        
+
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
-        
+
         // Definir encoding para request
         if (httpRequest.getCharacterEncoding() == null) {
             httpRequest.setCharacterEncoding(encoding);
         }
-        
+
         // Definir encoding e headers para response
         httpResponse.setCharacterEncoding(encoding);
         httpResponse.setContentType("text/html; charset=" + encoding);
-        
+
         // Headers de segurança
         addSecurityHeaders(httpResponse);
-        
+
         chain.doFilter(request, response);
     }
-    
+
     @Override
     public void destroy() {
         // Limpeza se necessário
     }
-    
+
     /**
      * Adiciona headers de segurança
      */
     private void addSecurityHeaders(HttpServletResponse response) {
         // Prevenir XSS
         response.setHeader("X-XSS-Protection", "1; mode=block");
-        
+
         // Prevenir MIME sniffing
         response.setHeader("X-Content-Type-Options", "nosniff");
-        
+
         // Frame options (prevenir clickjacking)
         response.setHeader("X-Frame-Options", "DENY");
-        
+
         // Referrer Policy
         response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-        
+
         // Content Security Policy (básico)
         response.setHeader("Content-Security-Policy", 
             "default-src 'self'; " +

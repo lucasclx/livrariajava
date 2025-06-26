@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Context>
-    
+
     <Resource name="jdbc/livraria"
               auth="Container"
               type="javax.sql.DataSource"
@@ -19,11 +19,11 @@
 
     <Parameter name="app.name" value="Livraria Mil Páginas" override="false"/>
     <Parameter name="app.version" value="1.0.0" override="false"/>
-    
+
     <Parameter name="app.session.timeout" value="30" override="false"/>
 
     <Manager pathname="" />
-    
+
     <Resources allowLinking="true" cachingAllowed="true" cacheTtl="300000"/>
 
     <Valve className="org.apache.catalina.valves.AccessLogValve" 

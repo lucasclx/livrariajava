@@ -11,10 +11,10 @@ import java.util.Map;
  * Para substituir o Gson e evitar problemas de dependências
  */
 public class JsonUtil {
-    
+
     private static final DateTimeFormatter JSON_DATE_FORMAT = 
         DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-    
+
     /**
      * Converte objeto para JSON
      */
@@ -22,35 +22,35 @@ public class JsonUtil {
         if (obj == null) {
             return "null";
         }
-        
+
         if (obj instanceof String) {
             return "\"" + escapeString((String) obj) + "\"";
         }
-        
+
         if (obj instanceof Number || obj instanceof Boolean) {
             return obj.toString();
         }
-        
+
         if (obj instanceof BigDecimal) {
             return ((BigDecimal) obj).toString();
         }
-        
+
         if (obj instanceof LocalDateTime) {
             return "\"" + ((LocalDateTime) obj).format(JSON_DATE_FORMAT) + "\"";
         }
-        
+
         if (obj instanceof List) {
             return listToJson((List<?>) obj);
         }
-        
+
         if (obj instanceof Map) {
             return mapToJson((Map<?, ?>) obj);
         }
-        
+
         // Para objetos personalizados, usar reflexão básica
         return objectToJson(obj);
     }
-    
+
     /**
      * Converte lista para JSON
      */
@@ -63,38 +63,38 @@ public class JsonUtil {
         sb.append("]");
         return sb.toString();
     }
-    
+
     /**
      * Converte mapa para JSON
      */
     private static String mapToJson(Map<?, ?> map) {
         StringBuilder sb = new StringBuilder("{");
         boolean first = true;
-        
+
         for (Map.Entry<?, ?> entry : map.entrySet()) {
             if (!first) sb.append(",");
             first = false;
-            
+
             sb.append("\"").append(escapeString(entry.getKey().toString())).append("\":");
             sb.append(toJson(entry.getValue()));
         }
-        
+
         sb.append("}");
         return sb.toString();
     }
-    
+
     /**
      * Converte objeto personalizado para JSON usando reflexão básica
      */
     private static String objectToJson(Object obj) {
         if (obj == null) return "null";
-        
+
         StringBuilder sb = new StringBuilder("{");
         boolean first = true;
-        
+
         try {
             java.lang.reflect.Field[] fields = obj.getClass().getDeclaredFields();
-            
+
             for (java.lang.reflect.Field field : fields) {
                 // Pular campos estáticos e transient
                 int modifiers = field.getModifiers();
@@ -102,13 +102,13 @@ public class JsonUtil {
                     java.lang.reflect.Modifier.isTransient(modifiers)) {
                     continue;
                 }
-                
+
                 field.setAccessible(true);
                 Object value = field.get(obj);
-                
+
                 if (!first) sb.append(",");
                 first = false;
-                
+
                 sb.append("\"").append(field.getName()).append("\":");
                 sb.append(toJson(value));
             }
@@ -116,17 +116,17 @@ public class JsonUtil {
             // Em caso de erro, retornar representação toString
             return "\"" + escapeString(obj.toString()) + "\"";
         }
-        
+
         sb.append("}");
         return sb.toString();
     }
-    
+
     /**
      * Escapa caracteres especiais em strings
      */
     private static String escapeString(String str) {
         if (str == null) return "";
-        
+
         return str.replace("\\", "\\\\")
                  .replace("\"", "\\\"")
                  .replace("\n", "\\n")
@@ -135,7 +135,7 @@ public class JsonUtil {
                  .replace("\b", "\\b")
                  .replace("\f", "\\f");
     }
-    
+
     /**
      * Cria resposta JSON de sucesso
      */
@@ -148,7 +148,7 @@ public class JsonUtil {
         sb.append("}");
         return sb.toString();
     }
-    
+
     /**
      * Cria resposta JSON de erro
      */
@@ -161,7 +161,7 @@ public class JsonUtil {
         sb.append("}");
         return sb.toString();
     }
-    
+
     /**
      * Cria resposta JSON simples com dados
      */

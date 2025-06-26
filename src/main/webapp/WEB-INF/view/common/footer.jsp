@@ -9,11 +9,15 @@
     </div>
 </footer>
 
+<script>
+    const contextPath = '${pageContext.request.contextPath}';
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="${pageContext.request.contextPath}/js/cart.js"></script>
 <script>
     // Atualiza a contagem de itens no carrinho no header
     function updateCartCount() {
-        fetch('${pageContext.request.contextPath}/cart/count')
+        fetch(`${contextPath}/cart/count`)
             .then(response => {
                 if (!response.ok) throw new Error('Network response was not ok');
                 return response.json();

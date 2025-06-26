@@ -30,7 +30,7 @@
     <listener>
         <listener-class>com.livraria.listeners.SessionListener</listener-class>
     </listener>
-    
+
     <listener>
         <listener-class>com.livraria.listeners.MysqlConnectionCleanupListener</listener-class>
     </listener>
@@ -38,7 +38,8 @@
         <session-timeout>30</session-timeout>
         <cookie-config>
             <http-only>true</http-only>
-            <secure>false</secure> </cookie-config>
+            <secure>false</secure>
+        </cookie-config>
     </session-config>
 
     <error-page>

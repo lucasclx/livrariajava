@@ -47,7 +47,7 @@
             <div class="d-grid">
                 <c:choose>
                     <c:when test="${livro.emEstoque()}">
-                         <button class="btn btn-primary btn-sm add-to-cart-btn" data-livro-id="${livro.id}">
+                         <button class="btn btn-primary btn-sm js-add-to-cart" data-livro-id="${livro.id}">
                             <i class="fas fa-shopping-cart me-2"></i> Adicionar ao Carrinho
                         </button>
                     </c:when>

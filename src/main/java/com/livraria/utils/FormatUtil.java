@@ -8,7 +8,7 @@ public class FormatUtil {
     public static String formatarMoeda(double valor) {
         return String.format("R$ %.2f", valor).replace(".", ",");
     }
-    
+
     /**
      * Formata valor monetário (BigDecimal)
      */
@@ -16,7 +16,7 @@ public class FormatUtil {
         if (valor == null) return "R$ 0,00";
         return formatarMoeda(valor.doubleValue());
     }
-    
+
     /**
      * Formata CEP
      */
@@ -28,14 +28,14 @@ public class FormatUtil {
         }
         return cep;
     }
-    
+
     /**
      * Formata telefone
      */
     public static String formatarTelefone(String telefone) {
         if (telefone == null) return "";
         String clean = telefone.replaceAll("[^0-9]", "");
-        
+
         if (clean.length() == 10) {
             return String.format("(%s) %s-%s", 
                 clean.substring(0, 2), 
@@ -47,10 +47,10 @@ public class FormatUtil {
                 clean.substring(2, 7), 
                 clean.substring(7));
         }
-        
+
         return telefone;
     }
-    
+
     /**
      * Trunca texto
      */
@@ -60,7 +60,7 @@ public class FormatUtil {
         }
         return texto.substring(0, limite) + "...";
     }
-    
+
     /**
      * Capitaliza primeira letra
      */

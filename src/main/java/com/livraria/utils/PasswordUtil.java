@@ -42,7 +42,7 @@ public class PasswordUtil {
             
             return Base64.getEncoder().encodeToString(combined);
             
-        } catch (Exception e) {
+        } catch (NoSuchAlgorithmException | java.io.UnsupportedEncodingException e) {
             throw new RuntimeException("Erro ao gerar hash da senha", e);
         }
     }
@@ -79,7 +79,7 @@ public class PasswordUtil {
             // Comparar os hashes
             return MessageDigest.isEqual(storedHash, testHash);
             
-        } catch (Exception e) {
+        } catch (NoSuchAlgorithmException | java.io.UnsupportedEncodingException e) {
             return false;
         }
     }
@@ -294,7 +294,7 @@ public class PasswordUtil {
             
             return Base64.getEncoder().encodeToString(combined);
             
-        } catch (Exception e) {
+        } catch (NoSuchAlgorithmException | java.io.UnsupportedEncodingException e) {
             throw new RuntimeException("Erro ao gerar hash da senha", e);
         }
     }

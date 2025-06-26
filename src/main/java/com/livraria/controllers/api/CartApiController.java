@@ -112,7 +112,25 @@ public class CartApiController extends BaseController {
     }
     
     private void adicionarItem(HttpServletRequest request, HttpServletResponse response, int livroId) throws Exception {
-        int quantidade = getIntParameter(request, "quantity", 1);
+        // Ler o corpo da requisição como JSON
+        StringBuilder sb = new StringBuilder();
+        String line;
+        try (java.io.BufferedReader reader = request.getReader()) {
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        }
+        String jsonBody = sb.toString();
+
+        // Usar JsonUtil para parsear o JSON e obter a quantidade
+        int quantidade = 1; // Valor padrão
+        if (jsonBody != null && !jsonBody.isEmpty()) {
+            com.google.gson.JsonObject jsonObject = com.livraria.utils.JsonUtil.parse(jsonBody);
+            if (jsonObject.has("quantity")) {
+                quantidade = jsonObject.get("quantity").getAsInt();
+            }
+        }
+
         cartService.adicionarItem(request, livroId, quantidade);
         
         int novoCount = cartService.contarItens(request);
